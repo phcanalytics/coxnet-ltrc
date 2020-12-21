@@ -32,6 +32,9 @@
       }
     ]
   },
+  "Bioconductor": {
+    "Version": "3.12"
+  },
   "Packages": {
     "BH": {
       "Package": "BH",
@@ -40,12 +43,12 @@
       "Repository": "CRAN",
       "Hash": "8f9ce74c6417d61f0782cbae5fd2b7b0"
     },
-    "DBI": {
-      "Package": "DBI",
-      "Version": "1.1.0",
+    "BiocManager": {
+      "Package": "BiocManager",
+      "Version": "1.30.10",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "4744be45519d675af66c28478720fce5"
+      "Hash": "db75371846625725e221470b310da1d5"
     },
     "MASS": {
       "Package": "MASS",
@@ -123,27 +126,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "e9c8188eb82b137301493492d767a1ac"
-    },
-    "bit": {
-      "Package": "bit",
-      "Version": "1.1-15.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "eb6c52d8cc44463085a4cde1c63df163"
-    },
-    "bit64": {
-      "Package": "bit64",
-      "Version": "0.9-7",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "3338d4a9b1352f5a613e2bdcefe784ea"
-    },
-    "blob": {
-      "Package": "blob",
-      "Version": "1.2.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "9addc7e2c5954eca5719928131fed98c"
     },
     "boot": {
       "Package": "boot",
@@ -249,13 +231,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "cd711af60c47207a776213a368626369"
-    },
-    "dbplyr": {
-      "Package": "dbplyr",
-      "Version": "1.4.4",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "2ba60a82dd9b6ca3cee0d8e2574cdf0e"
     },
     "desc": {
       "Package": "desc",
@@ -438,6 +413,12 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "726671f634529d470545f9fd1a9d1869"
+    },
+    "impute": {
+      "Package": "impute",
+      "Version": "1.64.0",
+      "Source": "Bioconductor",
+      "Hash": "9c84d5bab30c0e26c49ab6c000404b9e"
     },
     "isoband": {
       "Package": "isoband",
@@ -788,18 +769,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "1c5bb53bd428f3c42a25b7aeb983d8c7"
-    },
-    "tdplyr": {
-      "Package": "tdplyr",
-      "Version": "16.20.00.06",
-      "Source": "unknown",
-      "Hash": "b683ec04daeb7e8926f3766b8b539598"
-    },
-    "teradatasql": {
-      "Package": "teradatasql",
-      "Version": "17.0.0.5",
-      "Source": "unknown",
-      "Hash": "3370d2ea4d8ac0bde5cee972f89ac811"
     },
     "testthat": {
       "Package": "testthat",
