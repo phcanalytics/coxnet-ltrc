@@ -379,6 +379,13 @@
       "Repository": "CRAN",
       "Hash": "3e9b8a51dfdc95395632b25ce3ce8ebc"
     },
+    "glmnet": {
+      "Package": "glmnet",
+      "Version": "4.0-13",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "0f8aa59254c1cb06a1932cd926946a21"
+    },
     "globals": {
       "Package": "globals",
       "Version": "0.12.5",
@@ -776,6 +783,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "6f76f71042411426ec8df6c54f34e6dd"
+    },
+    "shape": {
+      "Package": "shape",
+      "Version": "1.4.5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "58510f25472de6fd363d76698d29709e"
     },
     "sp": {
       "Package": "sp",
