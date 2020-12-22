@@ -33,7 +33,7 @@
     ]
   },
   "Bioconductor": {
-    "Version": "3.12"
+    "Version": "3.11"
   },
   "Packages": {
     "BH": {
@@ -49,6 +49,12 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "db75371846625725e221470b310da1d5"
+    },
+    "BiocVersion": {
+      "Package": "BiocVersion",
+      "Version": "3.11.1",
+      "Source": "Bioconductor",
+      "Hash": "2331d61d077a7a0a5afe8c907ea9106b"
     },
     "MASS": {
       "Package": "MASS",
@@ -259,6 +265,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "1886c5bce3d9c0b4f9d0b113d76f9357"
+    },
+    "doRNG": {
+      "Package": "doRNG",
+      "Version": "1.8.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "a32487a942bdf5fd34224ad46f786e67"
     },
     "dplyr": {
       "Package": "dplyr",
@@ -748,6 +761,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "aa263e3ce17b177c49e0daade2ee3cdc"
+    },
+    "rngtools": {
+      "Package": "rngtools",
+      "Version": "1.5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "ee3ca1cacd13e35dbb71ac1999d98cbc"
     },
     "rprojroot": {
       "Package": "rprojroot",

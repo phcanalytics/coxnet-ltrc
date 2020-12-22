@@ -4,6 +4,7 @@ rm(list = ls())
 # Packages
 library("data.table")
 library("doParallel")
+library("doRNG") # Reproducible parallel foreach loops
 library("dplyr") 
 library("foreach")
 library("glmnet")
@@ -13,6 +14,7 @@ library("impute") # From bioconductor
 library("knitr")
 library("parallel")
 library("purrr")
+library("rngtools") # Required by dorng
 library("rsample")
 library("survival")
 library("tidyr") # (>= 1.0.0) for pivot_longer() and pivot_wider()
@@ -24,6 +26,7 @@ source("R/plot_patient_followup.R")
 source("R/impute_genes.R")
 source("R/make_xy.R")
 source("R/calibrate_sim.R")
+source("R/run_sim.R")
 source("R/adjust_surv.R")
 source("R/tidycoef.R")
 source("R/concordance.R")
@@ -44,7 +47,7 @@ if (!dir.exists("cache")){
 # Parallel
 PARALLEL <- TRUE
 if (PARALLEL) {
-  cl <- parallel::makeCluster(20, setup_strategy = "sequential")
+  cl <- parallel::makeCluster(20, setup_strategy = "sequential", outfile = "simout")
   registerDoParallel(cl)
 }
 
@@ -117,6 +120,39 @@ ggsave("figs/sim_calibration_cumhaz.pdf",
        sim_settings$os_comparisons$cumhaz_plot,
        height = 5, width = 7)
 
+# Example simulated data -------------------------------------------------------
+# No predictors (intercept only model)
+params <- set_params(sim_settings = sim_settings, dist = "weibullPH")
+simdata <- sim_survdata(params = params, n_pats = 5000)
+simdata_summary <- summarize_simdata(simdata, save = TRUE, name = "int")
+
+# Now include predictors (and hence create informative censoring when
+# using the Kaplan-Meier estimator). The design matrix X and parameters will 
+# be used in the simulations that follow
+x_sim <- sim_x(n_pats = 5000, sim_settings, p_bin = 10)
+params <- set_params(x_sim, sim_settings, dist = "weibullPH")
+simdata <- sim_survdata(x_sim, params)
+simdata_summary <- summarize_simdata(simdata, save = TRUE, name = "p10")
+
+# Run simulation for unpenalized Cox model -------------------------------------
+sim_coxph_p21 <- xfun::cache_rds({
+  run_sim(n_sims = N_SIMS, x = x_sim, params = params, method = "coxph")
+}, file = "sim_coxph_p21.rds", rerun = RERUN_CACHE)
+sim_coxph_21_summary <- summarize_sim(sim_coxph_p21, save = TRUE,
+                                      model_name = "coxph_p21")
+rm(sim_coxph_p21)
+
+# Run simulation for lasso model with lambda = 0 and small p -------------------
+# run_sim1(simdata, method = "coxnet", lambda = 0) # For debugging
+sim_coxlasso_lambda0_p21 <- xfun::cache_rds({
+  run_sim(n_sims = N_SIMS, x = x_sim, params = params, 
+          method = "coxnet", lambda = c(1, 0))
+}, file = "sim_coxlasso_lambda0_p21.rds", rerun = RERUN_CACHE)
+coxlasso_lambda0_p21_summary <- summarize_sim(
+  sim_coxlasso_lambda0_p21, save = TRUE, 
+  model_name = "coxlasso_lambda0_p21"
+)
+rm(sim_coxlasso_lambda0_p21)
 
 # Distribution of entry times --------------------------------------------------
 p_left_trunc <- ggplot(data, aes(x = entry_days_dx)) +

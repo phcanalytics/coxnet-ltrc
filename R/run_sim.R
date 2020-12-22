@@ -1,3 +1,4 @@
+# Simulate design matrix -------------------------------------------------------
 sim_vars <- function(n_pats, K){
   
   # Build correlation matrix
@@ -36,6 +37,7 @@ sim_x <- function(n_pats = 1000, sim_settings, p_bin) {
   return(X)
 }
 
+# Get parameters of model given design matrix ----------------------------------
 set_beta <- function(X, sim_settings, dist) {
   
   basefit <- sim_settings$os_base[[dist]]
@@ -65,19 +67,25 @@ set_beta <- function(X, sim_settings, dist) {
 }
 
 #' @export
-set_params <- function(X, sim_settings,
+set_params <- function(X = NULL, sim_settings,
                        dist = c("weibullPH", "survspline", "exp")) {
   dist <- match.arg(dist)
+  if (!is.null(X)) beta <- set_beta(X, sim_settings, dist)
   
   list(
-    beta = set_beta(X, sim_settings, dist),
+    beta = beta,
     os_base = sim_settings$os_base[[dist]],
     rc_base = sim_settings$rc_base[[dist]] 
   )
 }  
 
-predict_location <- function(intercept, beta, X, inv_transforms){
-  xb <- X %*% as.matrix(beta)
+# Simulate survival data from parameters and design matrix ---------------------
+predict_location <- function(intercept, beta = NULL, X = NULL, inv_transforms){
+  if (!is.null(X)) {
+    xb <- X %*% as.matrix(beta)
+  } else{
+    xb <- 0
+  }
   lp <- intercept + xb - mean(xb)
   res <- inv_transforms(lp)
   return(res)
@@ -144,8 +152,10 @@ entry_time_rng <- function(n, p_zero = .2, pos_mean = 1.6, pos_median = 1){
 }
 
 #' @export
-sim_survdata <- function(X, params){
-  n_pats <- nrow(X)
+sim_survdata <- function(X = NULL, params, n_pats = 5000){
+  if (!is.null(X)) {
+    n_pats <- nrow(X)
+  }
   
   # Latent survival
   death_time <- surv_rng(n = n_pats, beta = params$beta,
@@ -186,6 +196,7 @@ sim_survdata <- function(X, params){
   return(data[, ])
 }
 
+# Summarize simulated survival data --------------------------------------------
 plot_latent_surv <- function(data){
   ggplot(data, aes(x = death_time)) +
     geom_histogram(binwidth = 1/12, color = "black", fill = "white") +
@@ -291,7 +302,7 @@ summarize_km <- function(fits, probs = c(.1, .25, .5, .75, .9)){
 #' @export
 summarize_simdata <- function(data, save = FALSE, ...) {
   # Descriptive statistics for simulated survival data
-  latent_surv_plot <- plot_latent_surv(data)
+  latent_surv_plot <- plot_latent_surv(data) + coord_cartesian(xlim = c(0, 10))
   prop_rc <- 1 - mean(data$dead) 
   prop_truncated <-  mean(data$hidden)
   latent_entry_plot <- plot_latent_entry(data, stratify = FALSE)
@@ -335,6 +346,7 @@ save_simdata <- function(object, name = NULL) {
   saveRDS(object$data, paste0(output_path, "data.rds"))
 }
 
+# Run Monte Carlo simulation to test methods -----------------------------------
 make_train_test <- function(data){
   data_split <- rsample::initial_split(data, prop = .75)
   train_data <- rsample::training(data_split)[hidden == 0]
@@ -366,7 +378,7 @@ make_train_test <- function(data){
 }
 
 fit_model <- function(train, left_truncation,
-                      method = c("coxLasso", "coxph"),
+                      method = c("coxph", "coxnet"),
                       parallel,alpha, lambda){
   if (is.null(alpha)) alpha <- 1
   method <- match.arg(method)
@@ -381,25 +393,27 @@ fit_model <- function(train, left_truncation,
       train_df <- data.frame(cbind(train$x, train$y[, -1]))
       fit <- survival::coxph(survival::Surv(stop, status) ~ ., data = train_df)
     }
-  } else{ # cv.coxLasso()
+  } else{ # cv.glmnet()
     if (is.null(lambda)) {
       n_folds <- 10
     } else{
       n_folds <- 3
     }
     if (left_truncation == "Yes"){
-      fit <- coxLasso::cv.coxLasso(x = train$x, y = train$y, verbose = FALSE, 
-                                   standardize = FALSE, parallel = parallel,
-                                   alpha = alpha, lambda = lambda, 
-                                   nfolds = n_folds)
+      train_y <- survival::Surv(time = train$y[, 1], time2 = train$y[, 2], 
+                                event = train$y[, 3])
+      fit <- glmnet::cv.glmnet(x = train$x, y = train_y, 
+                               standardize = FALSE, parallel = parallel,
+                               alpha = alpha, lambda = lambda, 
+                               nfolds = n_folds, family = "cox")
     } else{
       train_y <- adjust_Surv(train$y, left_trunc = FALSE)
-      
-      fit <- coxLasso::cv.coxLasso(x = train$x, y = train_y, verbose = FALSE, 
-                                   standardize = FALSE, parallel = parallel,
-                                   alpha = alpha, lambda = lambda,
-                                   nfolds = n_folds)
+      fit <- glmnet::cv.glmnet(x = train$x, y = train_y, 
+                               standardize = FALSE, parallel = parallel,
+                               alpha = alpha, lambda = lambda,
+                               nfolds = n_folds, family = "cox")
     }
+    fit$x <- train$x; fit$y <- train_y
     if (!is.null(lambda)){
       fit$lambda.min <- lambda[length(lambda)] 
     }
@@ -408,7 +422,7 @@ fit_model <- function(train, left_truncation,
 }
 
 fit_models <- function(train, x_vars,
-                       method = c("coxLasso", "coxph"),
+                       method = c("coxnet", "coxph"),
                        parallel, alpha, lambda){
   fit_std <- fit_model(train = train, left_truncation = "No",
                        method = method,
@@ -426,9 +440,7 @@ make_coef_tbl <- function(beta, fits) {
   if (inherits(fits$fit[[1]], "coxph")) {
     betahat <- sapply(fits$fit, stats::coef)
   } else{
-    betahat <- sapply(fits$fit, function (x) {
-      x$coxLasso.fit$beta[, which(x$lambda == x$lambda.min)]
-    })
+    betahat <- sapply(fits$fit, function(x) stats::coef(x, s = "lambda.min")[, 1])
   }
   tbl <- data.table(
     Variable = names(beta),
@@ -450,12 +462,11 @@ predict_xb <- function(fit, new_xy, x_vars = NULL){
 }
 
 predict_surv <- function(fit, new_xy){
-  newdata <- data.frame(new_xy$x)
-  
   if (inherits(fit, "coxph")){ 
-    survival::survfit(fit, newdata, se.fit = FALSE)
+    survival::survfit(fit, newdata = data.frame(new_xy$x), se.fit = FALSE)
   } else {
-    survival::survfit(fit, newdata, s = "lambda.min", se.fit = FALSE)
+    survival::survfit(fit, newx = new_xy$x, s = "lambda.min", 
+                      x = fit$x, y = fit$y)
   }
 }
 
@@ -619,56 +630,72 @@ plot_calibration_sim <- function() {
     theme(legend.position = "bottom") 
 }
 
+run_sim1 <- function(data, method = "coxph", parallel = FALSE,
+                     alpha = 1, lambda = NULL) {
+  # Modeling
+  train_test <- make_train_test(data)
+  fits <- fit_models(train = train_test$train, method = method,
+                     parallel = parallel, alpha = alpha, 
+                     lambda = lambda)
+  scenarios <- eval_model_scenarios(fits, train_test)
+  cindex <- make_cindex_tbl(scenarios)
+  quantiles <- make_quantile_tbl(scenarios)
+  surv <- make_surv_tbl(scenarios, train_test)
+  
+  ## Survival calibration
+  calibration <- calibrate_simsurv(scenarios, train_test)
+  
+  # Return
+  res <- list(data = data[, .(event_time, entry_time, dead, hidden)],
+              coef = make_coef_tbl(params$beta, fits),
+              cindex = cindex,
+              quantiles = quantiles,
+              calibration = calibration)
+  return(res)
+}
+
 #' @import foreach
 #' @importFrom doRNG %dorng%
 #' @export
 run_sim <- function(n_sims = 1, x, params,
-                    method = c("coxLasso", "coxph"),
+                    method = c("coxph", "coxnet"),
                     parallel = FALSE,
                     alpha = 1, lambda = NULL){
   ptm <- proc.time()
   method <- match.arg(method)
-  
+  if (file.exists("simout")) {
+    msg <- paste0("Running simulation with method = ", method, 
+                  " and p = ", ncol(x), ".")
+    cat(msg, file= "simout", append = TRUE, sep = "\n")
+  }
   
   # Main loop
-  comb <- function(x, ...) {
+  combine_parallel <- function(x, ...) {
     inner_fun <- function(i) {
       c(x[[i]], lapply(list(...), function(y) y[[i]]))
     }
     lapply(seq_along(x), inner_fun)
   }
-  
   out <- foreach(i = 1:n_sims, 
-                 .combine = "comb",
+                 .export = c("sim_survdata", "surv_rng", "predict_location",
+                             "entry_time_rng", "predict_xb",
+                             "make_train_test", "fit_models", 
+                             "eval_model_scenarios", "make_cindex_tbl", "make_quantile_tbl", 
+                             "make_surv_tbl", "make_coef_tbl", "fit_model", "adjust_Surv", "predict_surv", 
+                             "compute_concordance", "calibrate_simsurv", "calibrate", 
+                             "calibrate.list", "calibrate.survfit", "run_sim1"),
+                 .packages = c("data.table", "dplyr"), # Used in functions without namespaces (pipes for dplyr)
+                 .combine = "combine_parallel",
                  .errorhandling = "pass",
                  .init = rep(list(list()), 5)
   ) %dorng% {
-    
+    if (i %% 5 == 0) print(i)
     data <- sim_survdata(X = x, params = params)
-    
-    # Modeling
-    train_test <- make_train_test(data)
-    fits <- fit_models(train = train_test$train, method = method,
-                       parallel = parallel, alpha = alpha, 
-                       lambda = lambda)
-    scenarios <- eval_model_scenarios(fits, train_test)
-    cindex <- make_cindex_tbl(scenarios)
-    quantiles <- make_quantile_tbl(scenarios)
-    surv <- make_surv_tbl(scenarios, train_test)
-    
-    ## Survival calibration
-    calibration <- calibrate_simsurv(scenarios, train_test)
-    
-    # Return
-    list(data[, .(event_time, entry_time, dead, hidden)],
-         make_coef_tbl(params$beta, fits),
-         cindex,
-         quantiles,
-         calibration
-    )
+    run_sim1(data = data, method = method, parallel = parallel,
+             alpha = alpha, lambda = lambda)
   }
   run_time <- proc.time() - ptm
-  
+
   # Combine results
   names(out) <- c("surv_data", "coef", "cindex", "quantiles", "calibration")
   res <- list(
