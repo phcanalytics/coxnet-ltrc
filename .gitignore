@@ -1,0 +1,13 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+data.rds
+output
+*.synctex.gz
+*.log
+*.bbl
+*.Rproj
+cache
+renv/.gitignore
+!output/README

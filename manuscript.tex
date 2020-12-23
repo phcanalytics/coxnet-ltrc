@@ -1,0 +1,454 @@
+\documentclass[11pt,final,fleqn]{article}\usepackage[]{graphicx}\usepackage[]{color}
+
+
+\usepackage{alltt}
+
+% basic packages
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in] { geometry }
+\usepackage{amssymb,amsmath, bm}
+\usepackage{verbatim}
+\usepackage[latin1]{inputenc}
+%\usepackage[OT1]{fontenc}
+\usepackage{setspace}
+\usepackage{natbib}
+\usepackage{enumitem}
+\usepackage[hyphens,spaces,obeyspaces]{url}
+\usepackage[font={bf}]{caption}
+%\usepackage{pgfplots}
+%\usepackage[font={bf}]{caption}
+\usepackage{latexsym}
+%\usepackage{euscript}
+\usepackage{graphicx}
+\usepackage{marvosym}
+%\usepackage[varg]{txfonts}  Older version of ``g'' in math.
+\usepackage{pdflscape}
+\usepackage{algorithm}
+
+% bibliography packages
+\usepackage{natbib}
+\bibpunct{(}{)}{;}{a}{}{,}
+\bibliographystyle{apa}
+\renewcommand{\bibname}{References}
+
+% hyperref options
+\usepackage{soul} % To highlight text (along with color)
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\hypersetup{
+    colorlinks,
+    linkcolor={blue!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+\hypersetup{pdfstartview={XYZ null null 1.00}} % PDF opens to 100% zoom
+\newcommand*{\Appendixautorefname}{Appendix}
+\renewcommand*{\sectionautorefname}{Section}
+\renewcommand*{\subsectionautorefname}{Section}
+\renewcommand*{\subsubsectionautorefname}{Section}
+\newcommand{\subfigureautorefname}{\figureautorefname}
+\newcommand{\aref}[1]{\hyperref[#1]{Appendix~\ref{#1}}}
+\newcommand{\algorithmautorefname}{Algorithm}
+
+% packages for tables
+\usepackage{longtable}
+\usepackage{booktabs, threeparttable}
+\usepackage{threeparttablex}
+\usepackage{tabularx}
+% dcolumn package
+\usepackage{dcolumn}
+\newcolumntype{.}{D{.}{.}{-1}}
+\newcolumntype{d}[1]{D{.}{.}{#1}}
+\captionsetup{belowskip=10pt,aboveskip=-5pt}
+\usepackage{multirow}
+% rotating package
+\usepackage[figuresright]{rotating}
+\usepackage{pdflscape}
+\usepackage{subcaption}
+\usepackage{caption} 
+\captionsetup[table]{skip=5pt}
+
+% packages for figures
+\usepackage{grffile}
+\usepackage{afterpage}
+\usepackage{float}
+\usepackage[section]{placeins}
+\usepackage[export]{adjustbox}
+
+% pacakges for code
+\usepackage{listings}
+
+% theorem package
+\usepackage{theorem}
+\theoremstyle{plain}
+\theoremheaderfont{\scshape}
+\newtheorem{theorem}{Theorem}
+\newtheorem{assumption}{Assumption}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+\newcommand{\qed}{\hfill \ensuremath{\Box}}
+\newcommand\indep{\protect\mathpalette{\protect\independenT}{\perp}}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\argmin}{arg\min}
+\DeclareMathOperator{\argmax}{arg\max}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\providecommand{\norm}[1]{\lVert#1\rVert}
+\renewcommand\r{\right}
+\renewcommand\l{\left}
+\newcommand\E{\mathbb{E}}
+\newcommand\dist{\buildrel\rm d\over\sim}
+\newcommand\iid{\stackrel{\rm i.i.d.}{\sim}}
+\newcommand\ind{\stackrel{\rm indep.}{\sim}}
+\newcommand\cov{{\rm Cov}}
+\newcommand\var{{\rm Var}}
+\newcommand\SD{{\rm SD}}
+\newcommand\bone{\mathbf{1}}
+\newcommand\bzero{\mathbf{0}}
+\DeclareMathOperator{\logit}{logit}
+\DeclareMathOperator{\Cat}{Cat}
+\DeclareMathOperator{\Multinomial}{Multinomial}
+
+% file paths and definitions
+\input{txtstats.txt}
+\makeatletter
+\newcommand*\ExpandableInput[1]{\@@input#1 }
+\makeatother
+
+% spacing 
+\usepackage[compact]{titlesec}
+\usepackage{etoolbox}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setstretch{1.3}
+\setlength{\abovecaptionskip}{15pt plus 3pt minus 2pt} % Space between caption and figure
+\BeforeBeginEnvironment{equation}{\begin{singlespace}}
+\AfterEndEnvironment{equation}{\end{singlespace}\noindent\ignorespaces}
+\BeforeBeginEnvironment{align}{\begin{singlespace}}
+\AfterEndEnvironment{align}{\end{singlespace}\noindent\ignorespaces}
+
+% appendix settings
+\usepackage[toc,page,header]{appendix}
+\renewcommand{\appendixpagename}{\centering Appendices}
+\usepackage{chngcntr}
+\usepackage{lipsum}
+
+% new commands
+\newcommand\CPP{{C\texttt{++}}}
+\newcommand\R{{\textsf{R}}}
+\newcommand*\sameaff[1][\value{footnote}]{\footnotemark[#1]}
+\newcommand\floor[1]{\lfloor#1\rfloor}
+\newcommand\ceil[1]{\lceil#1\rceil}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\pkg}[1]{{\fontseries{b}\selectfont #1}} 
+
+% subsubsection
+\titleclass{\subsubsubsection}{straight}[\subsection]
+
+\newcounter{subsubsubsection}[subsubsection]
+\renewcommand\thesubsubsubsection{\thesubsubsection.\arabic{subsubsubsection}}
+\renewcommand\theparagraph{\thesubsubsubsection.\arabic{paragraph}} % optional; useful if paragraphs are to be numbered
+
+\titleformat{\subsubsubsection}
+  {\normalfont\normalsize\bfseries}{\thesubsubsubsection}{1em}{}
+\titlespacing*{\subsubsubsection}
+{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
+\makeatletter
+\renewcommand\paragraph{\@startsection{paragraph}{5}{\z@}%
+  {3.25ex \@plus1ex \@minus.2ex}%
+  {-1em}%
+  {\normalfont\normalsize\bfseries}}
+\renewcommand\subparagraph{\@startsection{subparagraph}{6}{\parindent}%
+  {3.25ex \@plus1ex \@minus .2ex}%
+  {-1em}%
+  {\normalfont\normalsize\bfseries}}
+\def\toclevel@subsubsubsection{4}
+\def\toclevel@paragraph{5}
+\def\toclevel@paragraph{6}
+\def\l@subsubsubsection{\@dottedtocline{4}{7em}{4em}}
+\def\l@paragraph{\@dottedtocline{5}{10em}{5em}}
+\def\l@subparagraph{\@dottedtocline{6}{14em}{6em}}
+\makeatother
+
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{4}
+
+% title
+\title{Penalized regression for left-truncated and right-censored survival data}
+\author{Author list}
+\date{\today}
+
+\providecommand{\keywords}[1]
+{
+  \small	
+  \textbf{\textit{Keywords---}} #1
+}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+    High-dimensional data are common in the medical field as high-throughput screening, detailed electronic health record (EHR) information, and comprehensive genomics testing are now used to capture the patient profile. Statistical models that attempt to study the effects of many predictors on survival typically implement feature selection or penalized methods to mitigate the undesirable consequences of overfitting. In some cases survival data is also left truncated which can create an immortal time bias, but penalized survival methods that adjust for left truncation are unavailable in common software. To address these challenges, we implement a penalized Cox proportional hazards model for left-truncated and right-censored survival data and assess implications of left truncation adjustment on bias and inference. We use simulation studies and examples from high-dimensional real-world EHR and genomics data to highlight the pitfalls of failing to account for left truncation in survival modeling. The extension of survival modeling to left truncated data is available in the latest release of \pkg{glmnet}.
+\end{abstract}
+
+\keywords{left truncation, penalized regression, Lasso, high-dimensional data, survival analysis, Cox model}
+
+\section{Introduction}
+The recent development and accessibility of genomic (DNA sequencing, microarrays), proteomic (immuno-histology, tissue arrays), digital (wearables), and imaging (PET, fMRI) technologies have led to an increasing complexity and dimensionality of patient health information. The level of person-level and disease-specific detail captured by these technologies offers an exciting new opportunity to understand patient history and prognosis by combining these molecular data with macro-scale clinical data on patient characteristics, treatment, and outcomes. Specifically, these data may offer insights into risk factors affecting patient-related outcomes leading to interest in developing prognostic tools to improve clinical decision-making and patient care \citep{gui2005penalized, wishart2010predict, ow2016big, yousefi2017predicting}. Given the hundreds or even thousands of molecular, patho-physiological, and clinical parameters that may be readily available for each patient, developing an appropriate statistical model that is robust to overfitting is critical to ensure good model performance and generalizability. Survival analysis is of particular interest given that overall survival is often a primary outcome of interest.  
+
+In a high-dimensional setting, computationally efficient regularization and shrinkage techniques have been developed \citep{tibshirani1997lasso, friedman2010regularization, simon2011regularization} for the Cox model. Similar to ordinary least squares regression (OLS), these penalized regression methods estimate regression coefficients by minimizing the sum of squared errors, but place a constraint in the equation to minimize the sum of coefficients. This constraint (controlled by a parameter, $\lambda$) penalizes a high number of variables in the model and shrinks the coefficients of less influential features towards zero - acting, in cases when some coefficients are shrunk fully to zero, as automatic feature selection. Common penalized approaches include lasso \citep{tibshirani1996regression}, ridge \citep{hoerl1970ridgeA, hoerl1970ridgeB}, and elastic net \citep{zou2005regularization}, with extensions such as the adaptive lasso \citep{zou2006adaptive}. 
+
+A common challenge in survival data is that patients are often included in the data only after having been at risk (e.g. diseased) for some time so that patients with shorter survival times are unobserved. In other words, the data are left truncated because patients are only included if they survive beyond some initial milestone that marks entry into the observed data. An analysis of the observed patients is subject to an immortal time bias because observed patients cannot die prior to entering the study cohort \citep{levesque2010problem, giobbie2013challenges}. An example in medicine is a dataset describing patients who receive a specific diagnostic or genetic test; patients who die before having the chance to be tested are excluded from the data so their survival times do not contribute to overall survival estimates. Traditional survival models are inappropriate in this case and predicted survival probabilities are overestimated because of the exclusion of short survival times.
+
+Left truncation is a well known feature of medical data and there are methods to adjust for it \citep{kalbfleisch2011statistical}. The Kaplan-Meier estimator of the survival function requires almost no modifications as it is only necessary to change the risk set so that individuals are only at risk of an event after study entry \citep{tsai1987note}. Similarly, with left truncation, the likelihood function in a parametric model can be adjusted so that it is conditional on survival to the entry time.
+
+Here, we implement a penalized Cox proportional hazards for left-truncated and right-censored survival data and critically assess scenarios in which bias arises from and is exacerbated by left truncation. We apply the method to simulated data and a real-world use case from the Flatiron Health and Foundation Medicine Clinico-Genomic Database (CGDB). Our results highlight the importance of adjusting for left truncation for both inference and prediction. Furthermore, we show that use of inappropriate metrics for model evaluation can result in overly optimistic conclusions about model performance. For implementation of the proposed method, we introduce the left truncation extension to survival modeling in the R package \pkg{glmnet} v.X.X (CITE LATEST PACKAGE). 
+
+The remainder of this paper is organized as follows: In \autoref{sec:methods}, we introduce the penalized regression and left truncation framework and present the efficient method that adjusts for both. \autoref{sec:simulation} presents the simulation results and in \autoref{sec:rwd} the method is applied to a real-world dataset combining electronic health records and genomic testing. Finally, we discuss general takeaways and survival modeling recommendations in \autoref{sec:discussion}. 
+
+\section{Methods} \label{sec:methods}
+
+\subsection{Data and notation} 
+Consider a typical survival analysis framework in the absence of truncated survival times. For each patient $i$, we have data of the form $y_i$, $e_i$, $x_i$ where $y_i$ is the observed survival time, defined as the time between baseline and event, $e_i$ is the event or failure of interest (e.g. death), and $x_i = (x_{i,1}, x_{i,2} \ldots, x_{i,p})$ is a vector of covariates of length $p$ used in the regression model. The event or failure of interest $e_i$ is 1 if the event is observed or 0 if the event is right-censored. Suppose there are $m$ unique event times, and let $t_1 < t_2 < ... < t_m$ be the ordered, unique event times. In this framework, all subjects are assumed to be at risk of the event starting at a commonly-defined ``time zero'' (a milestone that serves as a reference point for survival such as date of diagnosis) and observed over the interval $[0,T]$ where $T$ is the maximum follow-up time. Let $j(i)$ be the index of the observation with an event at time $t_i$. A Cox proportional hazards model is commonly used to model the relationship between survival times $y_i$ and predictors $x_i$ assuming a semi-parametric hazard of the form
+
+\begin{equation}
+h_i(t) = h_0(t)e^{x_i^\intercal\beta}
+\end{equation}
+
+where $h_i(t)$ is the hazard for patient $i$ at time $t$, $h_0(t)$ is the baseline hazard shared across subjects, and $\beta$ is a length $p$ vector of predictor coefficients.  
+
+\citet{cox1972regression} proposed a partial likelihood for $\beta$ without involving the baseline hazard $h_0(t)$
+
+\begin{equation} \label{eqn:cox1972}
+\prod_{i=1}^{m} \frac{e^{x_{j(i)}^\intercal\beta}}{\sum_{j(i)\in R_i}  e^{x_{j(i)}^\intercal\beta}   } 
+\end{equation}
+
+where  $R_i = \{ j : y_j \geq t_i\}$ denotes the set of indices $j(i)$ who are ``at risk'' for failure at time $t_i$, called the risk set. Maximizing the partial likelihood solves for $\beta$ and allows for inferences on the relationship between survival time and the set of predictors. 
+
+\subsection{Left truncation}
+In the absence of left truncation, the risk set $R_i = \{ j : y_j \geq t_i \}$ assumes that every individual is at risk of an event at time 0 and continues to be at risk until the event occurs or the individual is censored. In this sense, all individuals enter the risk set at the same time and leave only at death or censoring. However, when survival times are left truncated, individuals are truly at risk prior to entering the study (e.g. prior to being observed for follow-up). Take \autoref{fig:followup} as an example.
+
+\begin{figure}[h]
+\caption{Patient follow-up. Left-truncated, right-censored patient follow-up in a hypothetical study cohort. Patients become eligible to enter the study after diagnosis (closed circle) and are followed until death (open circle) or censoring (cross). However, patients who die before the start of the study (dashed blue line) are left truncated (in red), and only those who have survived until the study start (in black) are observed.}
+\label{fig:followup}
+\centering
+\includegraphics[max size={\textwidth}{\textheight}]{figs/followup.pdf} 
+\end{figure}
+
+Survival is defined as the time from diagnosis until death, but the study does not begin until 2011 (dashed blue vertical line). Patients 2 and 5 (in red) are excluded from the analysis because of death and a right censoring event, respectively, prior to study eligibility. A naive analysis on this data would therefore be biased because it only contains survival time for ``super-survivors`` (those who have survived a long time) and the recently-diagnosed. 
+
+Fortunately, the partial likelihood can be easily modified to make $R_i$ the set of individuals who are at risk (have entered the study and are not censored or failed) at that time. Let individual $i$ have survival data of the form $(v_i, y_i, e_i, x_i)$, where individual $i$ enters the study at time $v_i$. The left-truncated risk set $R_{i\ast} = \{ j : y_j \geq t_i > v_j \}$. In other words, subjects are only considered at risk in the analysis after they have been observed to be at risk (e.g. exceeded their left truncation time). Here, event times $t_1 < t_2 < ... < t_m$ are ordered relative to the earliest chronological event time observed in the patient cohort, rather than assuming that all patients are at risk starting at the same referent time $0$.
+
+The partial likelihood in \autoref{eqn:cox1972} can then be evaluated by substituting $R_{i\ast}$ to make inferences on $\beta$ in the case of left truncation. 
+
+\subsection{Penalized regression with left-truncated and right-censored data}
+Penalized regression methods such as $l_1$ (lasso) \citep{tibshirani1996regression} and $l_2$ (ridge) \citep{tikhonov1963ridge} regression, elastic net regression \citep{zou2005regularization}, and SCAD (Smoothly Clipped Absolute Deviation) \citep{xie2009scad} have been developed to overcome the limitation of fitting a model to a large number of covariates. In a high dimensional feature space, where the number of predictors is larger than the sample size (i.e., $p$ > $n$), a model may exhibit low bias but suffer from poor prediction accuracy and limited generalizability, a consequence of overfitting the data. Penalized approaches, which add a regularization penalty to constrain the size of the $\beta$, reduce the complexity of the model and mitigate the negative effects of overfitting.
+
+The extension of penalized regression methods to survival data have been extensively described and applied, for example in microarray gene expression data \citep{gui2005penalized}, transcriptomes \citep{wu2011penalized}, and injury scale codes \citep{mittal2013penalized}. Like linear regression, the performance and fit of a Cox proportional hazards model is known to deteriorate with large $p$, providing an advantage to penalized approaches in high-dimensional, time-to-event feature sets.
+
+\citet{simon2011regularization} introduced a fast, pathwise algorithm to fit a regularized Cox proportional hazards model solving for 
+
+\begin{equation} \label{eqn:simon}
+\hat{\beta} = argmax_{\beta}  \left[ \frac{2}{n} \left( \sum_{i=1}^m x_{j(i)}^\intercal\beta - log\left(\sum_{j(i)\in R_i}  e^{x_{j(i)}^\intercal\beta)}\right) \right)  - \lambda P_{\alpha}\beta  \right] 
+\end{equation}
+
+where $\beta$ is the vector of regression coefficients and is maximized over \autoref{eqn:simon} subject to a constraint defined by the penalty $\lambda \cdot P_{\alpha}\beta$. As described elsewhere \citep{simon2011regularization}, the penalty can take the form of the $l_1$ (lasso), $l_2$ (ridge), or elastic net penalty,  and the algorithm fits over a path of $\lambda$ values via cyclical coordinate descent. Instead of solving a least squares problem at each iteration, the algorithm solves a penalized reweighted least squares problem, in which observation weights $w$ are defined in the coordinate descent least squares minimization step. The optimal $\lambda$ can be identified through cross-validation. Tied survival times are handled via the Breslow approximation \citep{breslow1972} and details provided in \citep{simon2011regularization}.
+
+Applying the standard penalized Cox implementation in the software \pkg{glmnet} to left-truncated survival data will result in biased estimates. However, the extension to adjust for left truncation is straightforward. Given survival data with left truncation and right censoring, we solve \autoref{eqn:simon} with a modification to the risk set $R_i$:
+
+\begin{equation}
+\hat{\beta} = argmax_{\beta}  \left[ \frac{2}{n} \left( \sum_{i=1}^m x_{j(i)}^\intercal\beta - log\left(\sum_{j(i)\in R_{i\ast}}  e^{x_{j(i)}^\intercal\beta)}\right) \right)  - \lambda P_{\alpha}\beta  \right] 
+\end{equation}
+
+where the left-truncated risk set $R_{i\ast} = \{ j : y_j \geq t_i > v_j \}$; that is, it considers subjects at risk only after their left truncation times. The method can take lasso, ridge, and elastic net penalties for $\lambda P_{\alpha}\beta$ defined elsewhere \citep{friedman2010regularization} and is a simple extension of default methods in \pkg{glmnet}. The efficient implementation of this method is non-trivial, as the usual updating of risk set components cannot be used when left truncation is present. This implementation is available in the release of \pkg{glmnet} v. X.X (CITE LATEST PACKAGE).
+
+\subsection{Real-world use case}
+We consider the Clinico-Genomic Database (CGDB) offered jointly by Flatiron Health and Foundation Medicine. The CGDB is an oncology research platform that combines real-world, patient-level clinical data and outcomes with patient-level genomic data to provide a comprehensive patient and tumor profile. Patients in the CGDB have received at least one Foundation Medicine tumor genomic test as well as have had their electronic health records captured by Flatiron Health. Together, these data sources represent thousands of potential predictors per patient, ranging from demographic, lab, and treatment information to the specific mutations detected on each biomarker included in a Foundation Medicine baitset. 
+
+We take a subset of $\nPatients$ stage IV, non-small cell lung cancer (NSCLC) patients in the CGDB as a use case for this study. The outcome of interest is survival time predicted from the date of Stage 4 diagnosis. Survival times are left-truncated because patients who die before receiving a Foundation Medicine test are logically not included in the cohort of Foundation Medicine test recipients. 
+
+As shown in \autoref{fig:left-trunc-time} the distribution of left truncation times (time from diagnosis to genomic testing) is right-tailed with approximately $\entryMoreOneYear$ of patients diagnosed more than one year prior to receiving the Foundation Medicine genomic test.  Moreover, the correlation between diagnosis year and left truncation time is strongly negative ({$\rho$} = $\corrDxYear$), suggesting the presence of left truncation survivor bias as patients with records in the CGDB diagnosed longer ago needed to survive more years before being tested. 
+
+\begin{figure}[h]
+\caption{Distribution of left truncation time (days) in non-small cell lung cancer patients in the CGDB}
+ \label{fig:left-trunc-time}
+ \centering
+\includegraphics[max size={\textwidth}{\textheight}]{figs/left_trunc_hist.pdf} 
+\end{figure}
+
+Next, we use these data as the basis for a simulation study and a real-world application.
+
+\section{Simulation study} \label{sec:simulation}
+Simulations were conducted to assess the performance of the method with left truncated survival data. To set notation, let $T_i$, $U_i$, and $V_i$ be latent survival, right censoring, and study entry times for patient $i$, respectively. The simulation proceeds by simulating $T_i$, $U_i$, and $V_i$ from suitable survival distributions and assumes that $T_i$, $U_i$, and $V_i$ are uncorrelated. The observed survival time is given by $Y_i = \rm{min}(T_i, U_i)$ and a patient is right-censored if $T_i > U_i$. Patients are left-truncated (i.e., hidden from the sample) if $V_i > Y_i$. 
+
+\subsection{Data generating process}
+We generated $n$ patients and $p$ predictors to construct a $n \times p$ matrix, $X$. The first 11 predictors were from the CGDB and the remaining $\tilde{p}$ variables were simulated binary variables. The CGDB variables were the same $11$ variables used in the small $p$ model in \autoref{sec:rwd} and generated by randomly sampling rows of the original data with replacement. The matrix of binary variables, $\tilde{X}$ was simulated using a (latent) multivariate probit approach
+
+\begin{equation}
+\begin{pmatrix}
+\tilde{x}_{i,1}^{*} \\
+\vdots \\
+\tilde{x}_{i,\tilde{p}}^{*}
+\end{pmatrix}
+\sim
+N
+\left(\begin{pmatrix}
+\mu_{1} \\
+\vdots \\
+\mu_{\tilde{p}}
+\end{pmatrix},
+\Sigma
+\right),
+\end{equation}
+
+with the $k$th binary variable $\tilde{x}_{i,k}=1$ if $\tilde{x}_{i,k}^{*} > 0$ and $0$ otherwise. Each diagonal element of $\Sigma$ equals 1 and non-diagonal elements determine the correlation between variables. The probability, $\pi_k$ that  variable $k$ was equal to $1$ was randomly sampled from a uniform distribution ranging from .2 to .8; that is, we sampled $\pi_k \sim U(0.2, 0.8)$ and set $\mu_k = \Phi^{-1}(\pi_k)$ where $\Phi(\cdot)$ is the cumulative density function of the normal distribution. $\Sigma$ was generated by filling a $\tilde{p} \times \tilde{p}$ matrix, $\tilde{\Sigma}$, with $N(0,1)$ random variables and setting  $\Sigma = S/D^TD$ with $S = \tilde{\Sigma}^T\tilde{\Sigma}$ and $D$ a vector containing the diagonal elements of $S$. 
+
+Latent survival time was simulated from a proportional hazards Weibull distribution with shape parameter $a$ and scaled parameter $m_i$ based on evidence from the CGDB as detailed in \autoref{subsec:sim-calibration}. Covariates predict latent survival time through their effect on the scale parameter,
+
+\begin{align} 
+m_i &= \rm{exp}(\alpha + x_i^T\beta), \\
+T_i &\sim \rm{Weibull}(a, m_i),
+\end{align} 
+
+where $\alpha$ is an intercept and $\beta$ is a vector of coefficients. $\alpha$ and values of $\beta$ for the CGDB variables were estimated from the CGDB data. The probability that the coefficient of a binary variables was non-zero was $0.5$ and drawn from a Bernoulli distribution. Non-zero coefficients were drawn from a uniform distribution with lower bound of $-0.5$ and upper bound of $0.5$ so that the minimum and maximum hazard ratios were $0.61$ and $1.65$, respectively. 
+
+Time to right censoring was also sampled from a Weibull distribution but did not depend on covariates, 
+
+\begin{equation} 
+U_i \sim \rm{Weibull}(\tilde{a}, \tilde{m}).
+\end{equation} 
+
+Lastly, a two-part model was used to simulate time to study entry so that a proportion $\tilde{\pi}$ of patients could enter the study at $t=0$ while a proportion $1-\tilde{\pi}$ would enter at $t>0$. The probability of an entry time greater than $0$ was drawn from a Bernoulli distribution and positive entry dates were modeled using a lognormal distribution. 
+
+\begin{align}
+d_i &\sim \rm{Bernoulli}(\tilde{\pi}) \\
+V_i^{*} &\sim \rm{Lognormal}(\mu, \sigma^2) \\
+V_i &=\begin{cases}
+ 0  \text{ if } d_i = 0\\
+  V_i^{*}  \text{ if } d_i = 1
+  \end{cases}
+\end{align}
+
+\subsection{Calibration} \label{subsec:sim-calibration}
+The simulation was calibrated to be consistent with the CGDB NSCLC data. The Nelson-Aalen estimator of the cumulative hazard of overall survival was generally monotonically decreasing, which suggested that a Weibull distribution could adequately capture the baseline hazard. This was further supported by the similarity in fit between a spline-based survival model with one internal knot at the median of uncensored survival time and the Weibull model. As such, an intercept only Weibull model was used to estimate $a$ and $\alpha$ in the simulation. Similarly, a Weibull distribution was used to model time to right censoring (by reversing the censoring indicator in the model for overall survival. Both the model for overall survival and right censoring adjusted for left truncation. 
+
+Coefficients for the CGDB variables were estimated using a Cox proportional hazards model. The full coefficient vector combined the coefficients from the CGDFB variables with the coefficients from the simulated binary variables. The covariates were centered, $m = \alpha + x^T\beta - E(x^T\beta)$, so that predicted survival was consistent with the intercept only Weibull model.
+
+The latent time to study entry is inherently unobserved, but we believe a two-part model can characterize the large fraction of tests in the observed data that occur near the diagnosis date  (\autoref{fig:left-trunc-time}). The probability of a positive entry time was set equal to $0.2$ and the lognormal distribution for positive entry times was derived using a right skewed distribution with a median value of $1$ and a mean value of $1.6$, both measured in years.  We found that this parameterization generated median survival times in the simulation that were similar to median survival in Kaplan-Meier estimates that did not adjust for left truncation in the CGDB.
+
+\subsection{Implementation}
+Datasets were simulated where each row contained information on a patient's observed survival time ($y_i)$, a censoring indicator ($e_i$), the time of study entry ($v_i$). 75\%  of patients were assigned to a training set and the remaining 25\% were assigned to a test set. Within the test set, Cox models with lasso penalties were fit among the observed (i.e., non-truncated) patients. Cross-validation with 10 folds was used to tune the  model and the value of $\lambda$ that minimized the partial likelihood deviance was selected. Models were fit with and without accounting for left truncation. 
+
+Predictions and model evaluations were performed on the test set. Testing was performed on both the "observed" sample, (non-truncated patients) and the "complete" sample (both truncated and non-truncated sample). The complete sample provides a true test of the method because there is non bias due to truncation. 
+
+This process was repeated $20$ times. For each iteration, models were evaluated based on a dataset consisting of $n=5,000$ patients. Simulations were peformed in both big and small $p$ scenarios. In the small $p$ scenario, $10$ binary variables were simulated in addition to the $11$ CGDB variables so that $p=21$; in the big $p$ scenario, $1,000$ binary variables were simulated so that $p=1,011$.
+
+\subsection{Results}
+We used calibration curves \citep{harrell2015regression} to compare models with and without a left truncation adjustment. Each point in the plot consists of simulated patients in a given decile of predicted survival at a given time point. The x-axis is the averaged predicted survival probability and the y-axis is the pseudo observed survival probability computed using the Kaplan-Meier estimator. Perfectly calibrated predictions are those that lie along the 45 degree line so that predicted and observed survival probabilities are equal. The plots consist of patients in the complete sample and are therefore a good test of the effectiveness of the left truncation adjustment.
+
+Calibration curves are displayed in \autoref{fig:sim_coxlasso_calibration_complete} for both the big and small $p$ scenarios. Predicted survival probabilities from the model that does not adjust for left truncation are too high because the model is fit on the observed sample consisting only of patients that survived long enough to enter the sample. In other words, failing to adjust for left truncation results in an overestimation of survival probabilities. In contrast, the left-truncated adjusted model corrects for this bias. The small $p$ model is almost perfectly calibrated with points along the 45 degree line.
+
+\begin{figure}[!ht]
+\caption{Calibration of survival predictions for lasso model in simulation}
+\label{fig:sim_coxlasso_calibration_complete}
+\centering
+\includegraphics[max size={.8\textwidth}{.8\textheight}]{figs/sim_coxlasso_calibration_complete.pdf} 
+\begin{minipage}{\linewidth}
+\footnotesize
+Notes: The Cox model with lasso penalty using the training data and was subsequently used to predict the survival function for each patient in the test set. The small and big $p$ models contained $21$ and $1,011$ predictors, respectively. Patients were divided into deciles at each time point based on their predicted survival probabilities. Each point in the plot represents patients within a decile. ``Predicted survival probability" is the average of the predicted survival functions from the Cox model across patients within each decile and the ``Observed survival probability" is the Kaplan-Meier estimate of the survival function within each decile. A perfect prediction lies on the black 45 degree line. 
+\end{minipage}
+\end{figure}
+
+The results of the big $p$ scenario are similar, although calibration is more difficult than in the lower dimensional setting with points lying farther from the 45 degree line on both extremes. Predictions tend to be more accurate for patients with predicted survival close to $0.5$, but underestimated for patients with higher survival probabilities and overestimated for patients with lower survival probabilities. Probability rescaling has been suggested in such cases (e.g. characteristic sigmoid-shaped calibration curves produced by different learning algorithms), for example with the use of Platt scaling \citep{platt1999scaling} or isotonic regression \citep{niculescu2005isotonic}.
+
+A common metric used to evaluate survival models is the C-index \citep{harrell1996multivariable}, which provides a measure of how well a model will discriminate prognosis between patients. We computed the C-index using predictions from the Cox model with lasso penalty on high dimensional data. The results are presented in \autoref{tbl:sim-model-discrimination} and suggest that care should be taken when using the C-index to evaluate survival models in the presence of left-truncated data. When using the observed sample to evaluate the model, the C-index is higher in model that does not adjust for left truncation, even though it is poorly calibrated. Furthermore, even when using the complete sample, the C-indices are very similar. 
+
+\begin{table}[!ht]
+\begin{center}
+\begin{threeparttable}
+\caption{Comparison of model discrimination in the simulation} \label{tbl:sim-model-discrimination}
+\begin{tabularx}{.7\textwidth}{@{\extracolsep{\fill}}llr}
+\hline
+\multicolumn{1}{l}{Left truncation adjustment} & \multicolumn{1}{l}{Test sample} & \multicolumn{1}{l}{C-index} \\
+\hline
+\ExpandableInput{tables/sim_coxlasso_p21_cindex.txt}
+\hline
+\end{tabularx}
+\scriptsize Cox models with lasso penalty were fit using the high-dimensional simulated data.
+\end{threeparttable}
+\end{center}
+\end{table}
+
+These results are perhaps not surprising. For example, when computing the C-index in the observed sample the model is evaluated in a test set that suffers from the same bias as the training set. Moreover, the similarity in the values of the C-index in the complete sample may be caused by the assumption of no direct correlation between the predictors and latent time to study entry. In other words, the bias in the coefficients is based only on the indirect correlation between the predictors and left truncation induced by (i) the correlation between the predictors and survival and (ii) the correlation between survival and the probability a patient is left-truncated. As we will see in \autoref{sec:rwd}, the impact of left truncation adjustment on the estimated values of the coefficients can be considerably larger if there is a more direct correlation. 
+
+\section{Real-world data application: Non-small cell lung cancer patients in the Clinico-Genomic Database (CGDB)} \label{sec:rwd}
+We fit models using $\nPatients$ stage IV, NSCLC patients. 75\%  of patients were assigned to a training set and the remaining 25\% were assigned to a test set. The training set was then used to train and tune both small $p$ and large $p$ models with 13 and $\nCovsBig$ predictor variables, respectively. Both un-penalized and lasso penalized Cox models were fit, with and without a left truncation adjustment. In the penalized models, the optimal value of the shrinkage parameter,  $\lambda$, was selected using the value that minimized the partial likelihood deviance in 10-fold cross-validation.  The models were evaluated by assessing predictions on the test set.
+
+In this real-world application, both small $p$ and large $p$ models were designed to highlight left truncation in a real-world dataset and its impact on inference, as opposed to optimizing predictive performance and the prognostic value of predictors. For this reason, models were kept non-complex and relatively uninformative, e.g. modeling linear and additive effects, applying no transformations to predictors (for instance, modeling mutations as binary), and including a variable, year of diagnosis, that is highly correlated with left truncation time but not necessarily with survival (\autoref{fig:left-trunc-time}). Survival was predicted from diagnosis. For an evaluation of meaningful prognostic clinical and genomic factors in NSCLC, see for example \citet{lai2020nsclc}.
+
+Specifically, the smaller model consisted of the following variables: year of diagnosis, age at diagnosis, race, practice type (academic or community center), and the mutational status (mutated/not mutated) of 3 known prognostic biomarkers for NSCLC (TP53, KRAS, and EGFR). For each biomarker, 3 alteration types were considered: copy number (CN), short variant (SV), and rearrangement (RE). $\nTrainSmall$ patients remained in the training set after dropping patients with missing values on at least one covariate. 
+
+The larger model included all non-biomarker variables from the smaller model and added all mutations tested by Foundation Medicine. As the data come from both historic and current clinico-genomic testing products, the set of tested genes has changed over time. To resolve the resultant missing data problem, we constrained the mutation data only to columns with less than 50\% missing indicators and imputed the remaining mutation data using k nearest neighbors \citep{troyanskaya_missing_2001}, with k = 20. 
+
+\autoref{fig:hr-plot} displays hazard ratios for each model. The plot for the large $p$ only contains coefficients ranked in the top 10 by absolute value of the hazard ratio in either the left truncation adjusted or non-adjusted model.  The arrows denote the impact of adjusting for left truncation on the hazard ratio. In some cases the adjustment can have a large impact on the hazard ratios, often moving a large hazard ratio all the way to $1$ (i.e., to a coefficient of $0$). This is most notable with diagnosis year, which has a hazard ratio above 2 in both the small and large $p$ models but is set to $1$ after the left truncation adjustment. This effect is likely due to the strong negative correlation between calendar time and the probability that a patient is left truncated. 
+
+\begin{figure}[h]
+\caption{Hazard ratios from Cox lasso model}
+\label{fig:hr-plot}
+\centering
+\includegraphics[max size={\textwidth}{\textheight}]{figs/hr.pdf} 
+\begin{minipage}{\linewidth}
+\footnotesize
+Notes: The figure for the "Large" $p$ model only includes variables ranked in the top 10 by the absolute value of the hazard ratio in either the left truncation adjusted or non-adjusted model.
+\end{minipage}
+\end{figure}
+
+\autoref{tbl:model-discrimination}  and \autoref{fig:surv-calibration} evaluate the models based on predictions on the test set. \autoref{tbl:model-discrimination} compares models using the C-index. The C-index is relatively low in all of these illustrative models, though is artificially higher in the unadjusted models that do not account for left truncation - sometimes considerably so - and decreases after adjustment as the predictor hazard ratios are pushed toward $1$ and there are fewer differences in predicted relative risks across patients. As expected, the lasso model has a higher C-index in the larger $p$ setting as the Cox model is considerably overfitted.
+
+\begin{table}[!ht]
+\begin{center}
+\begin{threeparttable}
+\caption{Comparison of model discrimination in the CGDB} \label{tbl:model-discrimination}
+\begin{tabularx}{\textwidth}{@{\extracolsep{\fill}}llrr}
+\hline
+\multicolumn{2}{l}{} & \multicolumn{2}{c}{C-index}  \\
+\cmidrule(r){3-4}  
+\multicolumn{1}{l}{Model} & \multicolumn{1}{l}{Covariate size} & \multicolumn{1}{l}{No adjustment} & \multicolumn{1}{l}{Adjustment}  \\
+\hline
+\ExpandableInput{tables/performance.txt}
+\hline
+\end{tabularx}
+\scriptsize Note: ``Adjusted'' models incorporate left truncation times.
+\end{threeparttable}
+\end{center}
+\end{table}
+
+\autoref{fig:surv-calibration} displays the same survival calibration curves presented in the simulation section. As in the simulation study, the unadjusted models overpredict survival probabilities. In contrast, the adjusted model tends to underpredict survival, which contrasts from the well calibrated adjusted models from the simulations. Here, the adjusted models tend to be adequately calibrated for patients with lower survival probabilities but less well calibrated for patients with higher survival probabilities. One possible reason for this result is that the adjusted models pushed many of the hazard ratios to $1$ and do not adequately separate low and high risk patients.
+
+\begin{figure}[h]
+\caption{Calibration of survival predictions in the CGDB from the Cox lasso model}
+\label{fig:surv-calibration}
+\centering
+\includegraphics[max size={\textwidth}{\textheight}]{figs/calibration_coxlasso.pdf} 
+\end{figure}
+
+\section{Discussion} \label{sec:discussion}
+In this paper, we implement an efficient approach for a left truncation-adjusted, penalized Cox proportional hazards model and critically assess its impact on bias and inference in left truncated data. Using simulation studies and examples from real-world EHR and genomics data, we showed that there is a need for approaches that can both adjust for left truncation and model high dimensional data. In particular, our simulation shows that predictions from models that fail to adjust for left truncation will overestimate true survival probabilities whereas models that properly adjust can yield well calibrated survival predictions, even with high-dimensional data. Moreover, in our real-world use case, there were significant differences in coefficient estimates between models that did and did not adjust for left truncation.
+
+Our results have important implications for specification, interpretation, and evaluation of prognostic survival models. Much of the difficulty arises because training and test sets are both subject to the same selection bias. In other words, a careful understanding of the data generating process is crucial and naive approaches can lead analysts astray. For example, our simulations suggest that commonly used C-index cannot differentiate between models that mimic the true data generating process and those that do not and may therefore lead to misleading conclusions in the presence of left truncated data. On the other hand, metrics that focus on predicted survival probabilities such as calibration curves are better able to determine whether a model can accurately predict the risk of an event.  
+
+In our real-world use case, an analyst could have mistakenly concluded that the high C-index in the non-adjusted model was indicative of good model performance when it was in fact driven primarily by a high correlation between predictors and left truncation. For instance, in our large $p$ model the hazard ratio for the predictor "year of diagnosis" moved from being the largest in absolute value to $1$ after adjusting for left truncation. The high C-index in the non-adjusted model was artificial because patients diagnosed earlier appeared to survive longer due to immortal time bias.
+
+Although not the primary focus of this paper, our approach generated findings that were both consistent with prior literature in genomics and clinically plausible. One of the mutation features that had the highest importance was the presence of short variants in the gene KEAP1. This finding is supported by similar reports of risk-conferring status in an independent lung cancer cohort \citep{shen_harnessing_2019}. Conversely, variants in EGFR and ALK were found to be protective in the CGDB data, putatively because mutations in these genes qualify patients to receive targeted therapies and therefore benefit from improved response and longer survival.
+
+We conclude with several recommendations. When making predictions with survival data is of interest, it is critical to define the risk set appropriately. To do this requires recognizing the underlying process by which individuals are captured in the data in the first place; i.e., when and how individuals came to be included in the database of interest. One of the motivations for the current work derives from the advent of biobank and genomic test databases that store information on patient illness - presumably after the patient has been diagnosed and ``at risk'' for some time. In these data, overlooking this ``delayed entry'' of at-risk patients would lead to adverse consequences including misleading conclusions, as we demonstrate in this work. In addition, we recommend that models should be evaluated using both discrimination and calibration based metrics.
+
+The implementation of this approach is available in \pkg{glmnet} v.X.X.X on CRAN.
+
+\pdfbookmark[1]{References}{References}
+\bibliography{references}
+
+
+\end{document}
