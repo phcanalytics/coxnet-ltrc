@@ -36,10 +36,10 @@ source("R/calibrate.R")
 set.seed(77)
 theme_set(theme_bw())
 center_title <- function() theme(plot.title = element_text(hjust = 0.5))
-N_SIMS <- 40
+N_SIMS <- 50
 
 # Caching
-RERUN_CACHE <- FALSE # Set to TRUE to rerun all cached results
+RERUN_CACHE <- TRUE # Set to TRUE to rerun all cached results
 if (!dir.exists("cache")){
   dir.create("cache")
 }
@@ -47,7 +47,7 @@ if (!dir.exists("cache")){
 # Parallel
 PARALLEL <- TRUE
 if (PARALLEL) {
-  cl <- parallel::makeCluster(20, setup_strategy = "sequential", outfile = "simout")
+  cl <- parallel::makeCluster(24, setup_strategy = "sequential", outfile = "simout")
   registerDoParallel(cl)
 }
 
@@ -154,6 +154,47 @@ coxlasso_lambda0_p21_summary <- summarize_sim(
 )
 rm(sim_coxlasso_lambda0_p21)
 
+# Run simulation for lasso model with small p ----------------------------------
+sim_coxlasso_p21 <- xfun::cache_rds({
+  run_sim(n_sims = N_SIMS, x = x_sim, params = params, 
+          method = "coxnet")
+}, file = "sim_coxlasso_p21.rds", rerun = RERUN_CACHE)
+sim_coxlasso_p21_summary <- summarize_sim(sim_coxlasso_p21, save = TRUE, 
+                                          model_name = "coxlasso_p21")
+rm(sim_coxlasso_p21)
+
+# Run simulation for ridge model with small p ----------------------------------
+sim_coxridge_p21 <- xfun::cache_rds({
+  run_sim(n_sims = N_SIMS, x = x_sim, params = params, 
+          method = "coxnet", alpha = 0)
+}, file = "sim_coxridge_p21.rds", rerun = RERUN_CACHE)
+sim_coxridge_p21_summary <- summarize_sim(sim_coxridge_p21, save = TRUE, 
+                                          model_name = "coxridge_p21")
+rm(sim_coxridge_p21)
+
+# Run simulation for lasso model with big p ------------------------------------
+x_sim <- sim_x(n_pats = 5000, sim_settings, p_bin = 1000)
+params <- set_params(x_sim, sim_settings, dist = "weibullPH")
+
+sim_coxlasso_p1011 <- xfun::cache_rds({
+  run_sim(n_sims = N_SIMS, x = x_sim, params = params, 
+          method = "coxnet")
+}, file = "sim_coxlasso_p1011.rds", rerun = RERUN_CACHE)
+sim_coxlasso_p1011_summary <- summarize_sim(sim_coxlasso_p1011, save = TRUE, 
+                                            model_name = "coxlasso_p1011")
+rm(sim_coxlasso_p1011)
+
+# Calibration plot comparing small and big p simulation ------------------------
+sim_coxlasso_calplot <- ggarrange(
+  sim_coxlasso_p21_summary$calibration_plots$complete +
+    ggtitle("(A) Small p") + center_title(),
+  sim_coxlasso_p1011_summary$calibration_plots$complete +
+    ggtitle("(B) Big p") + center_title(),
+  nrow = 2, common.legend = TRUE, legend = "bottom"
+)
+ggsave("figs/sim_coxlasso_calibration_complete.pdf", sim_coxlasso_calplot, 
+       width = 7, height = 9)
+
 # Distribution of entry times --------------------------------------------------
 p_left_trunc <- ggplot(data, aes(x = entry_days_dx)) +
   geom_histogram(binwidth = 60, colour = "white") + 
@@ -181,11 +222,11 @@ fit_models <- function(train){
                     x = TRUE),
     cox_ltrc = coxph(Surv(start, stop, status) ~ ., data = train_df_ltrc,
                      x = TRUE),
-    coxnet_rc_cv =  cv.glmnet(x = train$x, y = train_y_rc, 
+    coxlasso_rc_cv =  cv.glmnet(x = train$x, y = train_y_rc, 
                                standardize = FALSE,
                                alpha = 1, parallel = PARALLEL,
                                family = "cox"),
-    coxnet_ltrc_cv  =  cv.glmnet(x = train$x, y = train$y, 
+    coxlasso_ltrc_cv  =  cv.glmnet(x = train$x, y = train$y, 
                                standardize = FALSE,
                                alpha = 1, parallel = PARALLEL,
                                family = "cox")
@@ -193,10 +234,10 @@ fit_models <- function(train){
   print(proc.time() - ptm)
   
   # Add x and y to glmnet models for survfit 
-  fits$coxnet_rc_cv$x <- train$x
-  fits$coxnet_rc_cv$y <- train_y_rc
-  fits$coxnet_ltrc_cv$x <- train$x
-  fits$coxnet_ltrc_cv$y <- train$y
+  fits$coxlasso_rc_cv$x <- train$x
+  fits$coxlasso_rc_cv$y <- train_y_rc
+  fits$coxlasso_ltrc_cv$x <- train$x
+  fits$coxlasso_ltrc_cv$y <- train$y
   
   # Return
   return(fits)
@@ -216,7 +257,7 @@ fits <- c(fits_small, fits_big)
 n_fits <- length(fits)
 models <- tibble(
   id = as.character(1:n_fits),
-  name = rep(c("Cox", "Cox", "Coxnet", "Coxnet"), 2),
+  name = rep(c("Cox", "Cox", "Cox (lasso)", "Cox (lasso)"), 2),
   left_trunc = rep(c("No", "Yes"), n_fits/2),
   left_trunc_bool = rep(c(FALSE, TRUE), n_fits/2),
   p = rep(c("Small", "Big"), each = n_fits/2),
@@ -238,17 +279,16 @@ extract_coefs <- function(data, varnames){
 
 ## Small
 coefs_small <- extract_coefs(models %>% 
-                               filter(name == "Coxnet" & p == "Small"),
+                               filter(name == "Cox (lasso)" & p == "Small"),
                              vars_small)
 
 ## Big
 coefs_big <- extract_coefs(models %>% 
-                             filter(name == "Coxnet" & p == "Big"),
+                             filter(name == "Cox (lasso)" & p == "Big"),
                            vars_big) %>%
   mutate(rank = dense_rank(desc(abs(estimate)))) 
 vars_big_to_plot <- coefs_big %>% filter(rank <= 10) %>% pull(variable)
 coefs_big <- coefs_big %>% filter(variable %in% vars_big_to_plot)
-
 
 # Plot hazard ratios
 plot_hr <- function(coefs){
@@ -348,13 +388,39 @@ p_cal_cox <- ggarrange(p_cal_cox_small, p_cal_cox_big, nrow = 2,
 ggsave("figs/calibration_cox.pdf", p_cal_cox, width = 7, height = 9)
 
 # Cox Lasso plots
-p_cal_coxnet_small <- calplot(models %>% filter(name == "Coxnet" & p == "Small"),
+p_cal_coxlasso_small <- calplot(models %>% filter(name == "Cox (lasso)" & p == "Small"),
                               newy = test_small$y) +
   ggtitle("(A) Small p") + center_title()
-p_cal_coxnet_big <- calplot(models %>% filter(name == "Coxnet" & p == "Big"),
+p_cal_coxlasso_big <- calplot(models %>% filter(name == "Cox (lasso)" & p == "Big"),
                             newy = test_big$y) +
   ggtitle("(B) Large p") + center_title()
-p_cal_coxnet <- ggarrange(p_cal_coxnet_small, p_cal_coxnet_big, 
+p_cal_coxlasso <- ggarrange(p_cal_coxlasso_small, p_cal_coxlasso_big, 
                           nrow = 2, common.legend = TRUE, legend = "bottom")
-ggsave("figs/calibration_coxnet.pdf", p_cal_coxnet, width = 7, height = 9)
+ggsave("figs/calibration_coxlasso.pdf", p_cal_coxlasso, width = 7, height = 9)
 
+# Save text statistics ---------------------------------------------------------
+txt$nPatients <- formatC(nrow(data), format = "d", big.mark = ",")
+txt$nDeaths <- formatC(n_deaths, format = "d", big.mark = ",")
+txt$maxP <- formatC(as.integer(max_p), format = "d", big.mark = ",")
+txt$corrDxYear <- formatC(cor(data$index_date_year,
+                              data$entry_days_dx), 
+                          format = "f", digits = 2)
+txt$entryMoreOneYear <- paste0(formatC(100 * mean(data$entry_days_dx > 365), 
+                                       digits = 1, format = "f"),
+                               "\\%")
+txt$nCovsBig <- formatC(ncol(train_big$x), format = "d", big.mark = ",")
+txt$nTrainSmall <- formatC(nrow(train_small$x), format = "d", big.mark = ",")
+
+# Convert statistics to data frame
+txtstats <- data.frame(do.call(rbind, txt))
+
+# Output to text file to input into latex
+txtstats$def <-  "\\def"
+names(txtstats)[1] <- "value"
+txtstats$value <- as.character(txtstats$value)
+txtstats <- data.frame(def = txtstats$def, name = rownames(txtstats), value =  txtstats$value)
+txtstats$output <- paste(txtstats[, 1], " ", "\\", txtstats[, 2],
+                         "{", txtstats[, 3], "}", sep = "")
+fileConn <- file("txtstats.txt")
+writeLines(txtstats$output, fileConn)
+close(fileConn)

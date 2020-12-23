@@ -60,7 +60,7 @@ set_beta <- function(X, sim_settings, dist) {
     is_zero_beta_bin <- purrr::rbernoulli(p_bin, .5)
     beta_bin <- ifelse(is_zero_beta_bin,
                        0,
-                       stats::runif(p_bin, -.5, .5))
+                       stats::runif(p_bin, -.25, .25))
     beta[which_bin] <- beta_bin
   }
   return(beta)
@@ -161,6 +161,7 @@ sim_survdata <- function(X = NULL, params, n_pats = 5000){
   death_time <- surv_rng(n = n_pats, beta = params$beta,
                          basefit = params$os_base,
                          X = X)/365.25
+  death_time <- pmin(death_time, 100) # Maximum survival
   
   # Right censoring time
   censored_time <- surv_rng(n = n_pats,  beta = params$beta,
@@ -664,8 +665,9 @@ run_sim <- function(n_sims = 1, x, params,
   ptm <- proc.time()
   method <- match.arg(method)
   if (file.exists("simout")) {
-    msg <- paste0("Running simulation with method = ", method, 
-                  " and p = ", ncol(x), ".")
+    msg <- paste0("Running simulation with 'method' = ", method, 
+                  " , 'p' = ", ncol(x), ", and ",
+                  "'lambda' = ", paste(lambda, collapse=", "))
     cat(msg, file= "simout", append = TRUE, sep = "\n")
   }
   
@@ -730,7 +732,7 @@ summarize_sim <- function(object, save = FALSE, ...) {
              max = max(get(var))),
          by = by][, ]
   }
-  
+
   # Survival data
   ## Proportion censored
   object$surv_data[, rc := 1 - dead]
