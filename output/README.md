@@ -1,1 +1,1 @@
-Relatively large output from the imulations is stored in this directory. 
+Relatively large output from the simulations is stored in this directory. 
