@@ -1,5 +1,5 @@
 % latex table generated in R 4.0.1 by xtable 1.8-4 package
-% Wed Dec 23 22:06:23 2020
+% Thu Dec 24 04:20:28 2020
   \hline
 Cox & Small & 0.647 & 0.579 \\ 
   Cox (lasso) & Small & 0.647 & 0.576 \\ 

@@ -688,7 +688,7 @@ run_sim <- function(n_sims = 1, x, params,
                              "calibrate.list", "calibrate.survfit", "run_sim1"),
                  .packages = c("data.table", "dplyr"), # Used in functions without namespaces (pipes for dplyr)
                  .combine = "combine_parallel",
-                 .errorhandling = "pass",
+                 .errorhandling = "remove",
                  .init = rep(list(list()), 5)
   ) %dorng% {
     if (i %% 5 == 0) print(i)

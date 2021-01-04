@@ -36,7 +36,7 @@ source("R/calibrate.R")
 set.seed(77)
 theme_set(theme_bw())
 center_title <- function() theme(plot.title = element_text(hjust = 0.5))
-N_SIMS <- 50
+N_SIMS <- 200
 
 # Caching
 RERUN_CACHE <- TRUE # Set to TRUE to rerun all cached results
@@ -47,7 +47,7 @@ if (!dir.exists("cache")){
 # Parallel
 PARALLEL <- TRUE
 if (PARALLEL) {
-  cl <- parallel::makeCluster(24, setup_strategy = "sequential", outfile = "simout")
+  cl <- parallel::makeCluster(20, setup_strategy = "sequential", outfile = "simout")
   registerDoParallel(cl)
 }
 
