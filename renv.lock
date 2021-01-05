@@ -607,10 +607,10 @@
     },
     "mvtnorm": {
       "Package": "mvtnorm",
-      "Version": "1.1-2",
+      "Version": "1.1-1",
       "Source": "Repository",
-      "Repository": "R-Forge",
-      "Hash": "6f0133c3842aef0394dbd844a21d3f5f"
+      "Repository": "CRAN",
+      "Hash": "69fa7331e7410c2a2cb3f9868513904f"
     },
     "nlme": {
       "Package": "nlme",
