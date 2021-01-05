@@ -4,10 +4,10 @@
 #' @return A [ggplot2][ggplot2::ggplot2] object.
 #' @export
 plot_patient_followup <- function(){
-  dat <- data.frame(ID = 1:7, event = c(0, 1, 1, 1, 1, 0, 0), 
+  dat <- data.frame(ID = 1:7, event = c(0, 1, 1, 1, 0, 0, 0), 
                     t1 = c(1989, 1991, 1993, 2007, 2008, 2012, 2014), 
                     t2 = c(2019, 1998, 2013, 2017, 2009, 2019, 2019), 
-                    censored = c(1, 0, 0, 0, 0, 1, 1)) #, .Names = c("ID", "Death", "t1", "t2", "Censored")) #, class = "data.frame", row.names = c(NA, -6L))
+                    censored = c(1, 0, 0, 0, 1, 1, 1)) #, .Names = c("ID", "Death", "t1", "t2", "Censored")) #, class = "data.frame", row.names = c(NA, -6L))
   
   # Create event variable
   #dat$Death <- with(dat, ifelse(Death, "Dead", "Censored"))
