@@ -1,11 +1,6 @@
 # Setup ------------------------------------------------------------------------
 rm(list = ls())
 
-# Installation
-install.packages("BiocManager") # to install Bioconductor manager
-BiocManager::install("impute") # to install impute from Bioconductor
-renv::restore() # to install all other dependencies
-
 # Packages
 library("data.table")
 library("doParallel")

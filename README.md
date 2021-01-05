@@ -3,4 +3,13 @@ This repository contains code for a paper on estimation and evaluation of penali
 
 The analysis was performed with the Flatiron Health and Foundation Medicine Clinico-Genomic Database (CGDB). A single analysis dataset named `data.rds` is read into `main.R`, but we are unfortuntely not permitted to share it. 
 
-R package dependencies are managed through the [`renv`](https://rstudio.github.io/renv/articles/renv.html) package. You can view all packages and their versions in the lockfile [`renv.lock`](renv.lock). All required packages and the appropriate versions can be installed with `renv::restore()`.
+R package dependencies are managed through the [`renv`](https://rstudio.github.io/renv/articles/renv.html) package. You can view all packages and their versions in the lockfile [`renv.lock`](renv.lock). 
+
+All required packages and the appropriate versions can be installed with `renv::restore()`. In some cases the Bioconductor manager and one Bioconductor package must be installed separately:
+
+```
+install.packages("BiocManager") # to install Bioconductor manager
+BiocManager::install("impute") # to install impute from Bioconductor
+renv::restore() # to install all other dependencies
+```
+
