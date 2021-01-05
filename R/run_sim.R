@@ -631,8 +631,11 @@ plot_calibration_sim <- function() {
     theme(legend.position = "bottom") 
 }
 
-run_sim1 <- function(data, method = "coxph", parallel = FALSE,
+run_sim1 <- function(x, params, method = "coxph", parallel = FALSE,
                      alpha = 1, lambda = NULL) {
+  # Data 
+  data <- sim_survdata(X = x, params = params)
+  
   # Modeling
   train_test <- make_train_test(data)
   fits <- fit_models(train = train_test$train, method = method,
@@ -688,13 +691,25 @@ run_sim <- function(n_sims = 1, x, params,
                              "calibrate.list", "calibrate.survfit", "run_sim1"),
                  .packages = c("data.table", "dplyr"), # Used in functions without namespaces (pipes for dplyr)
                  .combine = "combine_parallel",
-                 .errorhandling = "remove",
+                 .errorhandling = "pass",
                  .init = rep(list(list()), 5)
   ) %dorng% {
     if (i %% 5 == 0) print(i)
-    data <- sim_survdata(X = x, params = params)
-    run_sim1(data = data, method = method, parallel = parallel,
-             alpha = alpha, lambda = lambda)
+    it <- 1
+    while (it > 0) {
+      tryout <- try(run_sim1(x = x, params = params, method = method, parallel = parallel,
+                             alpha = alpha, lambda = lambda))
+      if (inherits(tryout, "try-error")) {
+        print(paste0("Error during iteration ", i,". Rerunning..."))
+        if (it == 5) stop(paste0("Too many errors during iteration ", i), 
+                          call. = FALSE)
+        it <- it + 1
+        tryout <- NULL
+      } else{
+        break
+      }
+    }
+    return(tryout)
   }
   run_time <- proc.time() - ptm
 
@@ -708,9 +723,9 @@ run_sim <- function(n_sims = 1, x, params,
     calibration = rbindlist(out$calibration, idcol = "sim"),
     run_time = run_time,
     n_patients = nrow(x),
-    p = ncol(x),
-    n_sims = n_sims
+    p = ncol(x)
   )
+  res$n_sims <- length(unique(res$surv_data$sim))
   return(res)
 }
 
