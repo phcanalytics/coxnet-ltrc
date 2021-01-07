@@ -89,13 +89,13 @@ vars_small <- c("Practice type: community", "Index year", "African American",
                 "Other race", "White", "Age", "TP53 RE",
                 "TP53 CN", "TP53 SV", "KRAS SV", "EGFR SV")
 
-# Big p formula 
-f_big <- as.formula(paste0(
+# Large p formula 
+f_large <- as.formula(paste0(
   "~ PracticeType + index_date_year + Race + age_at_dx + `",
   paste(selected_genes ,collapse = "`+`"),
   "`")
 )
-vars_big <- c(vars_small[1:6], 
+vars_large <- c(vars_small[1:6], 
               gsub("_", ":", selected_genes))
 
 # XY test/train data -----------------------------------------------------------
@@ -103,9 +103,9 @@ vars_big <- c(vars_small[1:6],
 train_small <- make_xy(train_data, f_small)
 test_small <- make_xy(test_data, f_small)
 
-# Big p
-train_big <- make_xy(train_data, f_big)
-test_big <- make_xy(test_data, f_big)
+# Large p
+train_large <- make_xy(train_data, f_large)
+test_large <- make_xy(test_data, f_large)
 
 # Clean up
 rm(train_data)
@@ -172,7 +172,7 @@ sim_coxridge_p21_summary <- summarize_sim(sim_coxridge_p21, save = TRUE,
                                           model_name = "coxridge_p21")
 rm(sim_coxridge_p21)
 
-# Run simulation for lasso model with big p ------------------------------------
+# Run simulation for lasso model with large p ----------------------------------
 x_sim <- sim_x(n_pats = 5000, sim_settings, p_bin = 1000)
 params <- set_params(x_sim, sim_settings, dist = "weibullPH")
 
@@ -184,12 +184,12 @@ sim_coxlasso_p1011_summary <- summarize_sim(sim_coxlasso_p1011, save = TRUE,
                                             model_name = "coxlasso_p1011")
 rm(sim_coxlasso_p1011)
 
-# Calibration plot comparing small and big p simulation ------------------------
+# Calibration plot comparing small and large p simulation ----------------------
 sim_coxlasso_calplot <- ggarrange(
   sim_coxlasso_p21_summary$calibration_plots$complete +
     ggtitle("(A) Small p") + center_title(),
   sim_coxlasso_p1011_summary$calibration_plots$complete +
-    ggtitle("(B) Big p") + center_title(),
+    ggtitle("(B) Large p") + center_title(),
   nrow = 2, common.legend = TRUE, legend = "bottom"
 )
 ggsave("figs/sim_coxlasso_calibration_complete.pdf", sim_coxlasso_calplot, 
@@ -204,7 +204,7 @@ p_left_trunc <- ggplot(data, aes(x = entry_days_dx)) +
 ggsave("figs/left_trunc_hist.pdf", p_left_trunc, height = 5, width = 7)
 
 # Number of deaths -------------------------------------------------------------
-n_deaths <- sum(train_big$y[, "status"])
+n_deaths <- sum(train_large$y[, "status"])
 max_p <- n_deaths/15 # Rule of thumb for max number of predictors in Cox model
 
 # Helper function to fit models  -----------------------------------------------
@@ -248,10 +248,10 @@ fits_small <- xfun::cache_rds({
   fit_models(train = train_small)
 }, file = "fits_small.rds", rerun = RERUN_CACHE)
 
-fits_big <- xfun::cache_rds({
-  fit_models(train = train_big)
-}, file = "fits_big.rds", rerun = RERUN_CACHE)
-fits <- c(fits_small, fits_big)
+fits_large <- xfun::cache_rds({
+  fit_models(train = train_large)
+}, file = "fits_large.rds", rerun = RERUN_CACHE)
+fits <- c(fits_small, fits_large)
 
 # Store model fits -------------------------------------------------------------
 n_fits <- length(fits)
@@ -260,12 +260,12 @@ models <- tibble(
   name = rep(c("Cox", "Cox", "Cox (lasso)", "Cox (lasso)"), 2),
   left_trunc = rep(c("No", "Yes"), n_fits/2),
   left_trunc_bool = rep(c(FALSE, TRUE), n_fits/2),
-  p = rep(c("Small", "Big"), each = n_fits/2),
+  p = rep(c("Small", "Large"), each = n_fits/2),
   fit = fits,
   train = c(rep(list(train_small), n_fits/2), 
-            rep(list(train_big), n_fits/2)),
+            rep(list(train_large), n_fits/2)),
   test = c(rep(list(test_small), n_fits/2), 
-           rep(list(test_big), n_fits/2))
+           rep(list(test_large), n_fits/2))
 )
 
 # Hazard ratio plot ------------------------------------------------------------
@@ -282,13 +282,13 @@ coefs_small <- extract_coefs(models %>%
                                filter(name == "Cox (lasso)" & p == "Small"),
                              vars_small)
 
-## Big
-coefs_big <- extract_coefs(models %>% 
-                             filter(name == "Cox (lasso)" & p == "Big"),
-                           vars_big) %>%
+## Large
+coefs_large <- extract_coefs(models %>% 
+                             filter(name == "Cox (lasso)" & p == "Large"),
+                           vars_large) %>%
   mutate(rank = dense_rank(desc(abs(estimate)))) 
-vars_big_to_plot <- coefs_big %>% filter(rank <= 10) %>% pull(variable)
-coefs_big <- coefs_big %>% filter(variable %in% vars_big_to_plot)
+vars_large_to_plot <- coefs_large %>% filter(rank <= 10) %>% pull(variable)
+coefs_large <- coefs_large %>% filter(variable %in% vars_large_to_plot)
 
 # Plot hazard ratios
 plot_hr <- function(coefs){
@@ -307,8 +307,8 @@ plot_hr <- function(coefs){
     scale_y_continuous(breaks = seq(.8, 1.6, .1), limits = c(.8, 1.6)) 
 }
 p_hr_small <- plot_hr(coefs_small) + ggtitle("(A) Small p") + center_title()
-p_hr_big <- plot_hr(coefs_big) + ggtitle("(B) Large p") + center_title()
-p_hr <- ggarrange(p_hr_small, p_hr_big, nrow = 2, common.legend = TRUE, 
+p_hr_large <- plot_hr(coefs_large) + ggtitle("(B) Large p") + center_title()
+p_hr <- ggarrange(p_hr_small, p_hr_large, nrow = 2, common.legend = TRUE, 
                   legend = "bottom", align = "v")
 ggsave("figs/hr.pdf", p_hr, width = 7, height = 9)
 
@@ -380,10 +380,10 @@ calplot <- function(data, newy){
 p_cal_cox_small <- calplot(models %>% filter(name == "Cox" & p == "Small"),
                            newy = test_small$y) + 
   ggtitle("(A) Small p") + center_title()
-p_cal_cox_big <- calplot(models %>% filter(name == "Cox" & p == "Big"),
-                         newy = test_big$y) +
+p_cal_cox_large <- calplot(models %>% filter(name == "Cox" & p == "Large"),
+                         newy = test_large$y) +
   ggtitle("(B) Large p") + center_title()
-p_cal_cox <- ggarrange(p_cal_cox_small, p_cal_cox_big, nrow = 2,
+p_cal_cox <- ggarrange(p_cal_cox_small, p_cal_cox_large, nrow = 2,
                        common.legend = TRUE,  legend="bottom")
 ggsave("figs/calibration_cox.pdf", p_cal_cox, width = 7, height = 9)
 
@@ -391,10 +391,10 @@ ggsave("figs/calibration_cox.pdf", p_cal_cox, width = 7, height = 9)
 p_cal_coxlasso_small <- calplot(models %>% filter(name == "Cox (lasso)" & p == "Small"),
                               newy = test_small$y) +
   ggtitle("(A) Small p") + center_title()
-p_cal_coxlasso_big <- calplot(models %>% filter(name == "Cox (lasso)" & p == "Big"),
-                            newy = test_big$y) +
+p_cal_coxlasso_large <- calplot(models %>% filter(name == "Cox (lasso)" & p == "Large"),
+                            newy = test_large$y) +
   ggtitle("(B) Large p") + center_title()
-p_cal_coxlasso <- ggarrange(p_cal_coxlasso_small, p_cal_coxlasso_big, 
+p_cal_coxlasso <- ggarrange(p_cal_coxlasso_small, p_cal_coxlasso_large, 
                           nrow = 2, common.legend = TRUE, legend = "bottom")
 ggsave("figs/calibration_coxlasso.pdf", p_cal_coxlasso, width = 7, height = 9)
 
@@ -408,7 +408,7 @@ txt$corrDxYear <- formatC(cor(data$index_date_year,
 txt$entryMoreOneYear <- paste0(formatC(100 * mean(data$entry_days_dx > 365), 
                                        digits = 1, format = "f"),
                                "\\%")
-txt$nCovsBig <- formatC(ncol(train_big$x), format = "d", big.mark = ",")
+txt$nCovsLarge <- formatC(ncol(train_large$x), format = "d", big.mark = ",")
 txt$nTrainSmall <- formatC(nrow(train_small$x), format = "d", big.mark = ",")
 
 # Convert statistics to data frame

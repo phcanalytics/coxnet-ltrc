@@ -1,5 +1,5 @@
 % latex table generated in R 4.0.1 by xtable 1.8-4 package
-% Tue Jan  5 01:34:35 2021
+% Wed Jan  6 00:47:41 2021
   \hline
 No & Observed & 0.69 \\ 
   Yes & Observed & 0.65 \\ 

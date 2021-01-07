@@ -3,5 +3,5 @@
 \def \maxP{122}
 \def \corrDxYear{-0.63}
 \def \entryMoreOneYear{21.5\%}
-\def \nCovsBig{639}
+\def \nCovsLarge{639}
 \def \nTrainSmall{3,022}
