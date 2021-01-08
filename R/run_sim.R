@@ -283,6 +283,25 @@ plot_km <- function(fits){
            linetype = guide_legend(ncol = 1))
 }
 
+plot_km2 <- function(km_sim, km_rwd){
+  surv_df <- rbind(
+    data.table(label = "Simulation",
+               time = km_sim$time,
+               prob = km_sim$surv),
+    data.table(label = "CGDB",
+               time = km_rwd$time/365.25,
+               prob = km_rwd$surv)
+    
+  )
+  ggplot(surv_df,
+         aes(x = time, y = prob, col = label)) + 
+    geom_line() + 
+    scale_color_discrete(name = "") +
+    xlab("Years") + ylab("Survival probability") +
+    theme(legend.position = "bottom") +
+    coord_cartesian(xlim = c(0, 15))
+}
+
 summarize_km <- function(fits, probs = c(.1, .25, .5, .75, .9)){
   n_fits <- length(fits)
   q_mat <- matrix(NA, nrow = n_fits, ncol = length(probs))
@@ -301,7 +320,7 @@ summarize_km <- function(fits, probs = c(.1, .25, .5, .75, .9)){
 }
 
 #' @export
-summarize_simdata <- function(data, save = FALSE, ...) {
+summarize_simdata <- function(data, km_rwd = NULL, save = FALSE, ...) {
   # Descriptive statistics for simulated survival data
   latent_surv_plot <- plot_latent_surv(data) + coord_cartesian(xlim = c(0, 10))
   prop_rc <- 1 - mean(data$dead) 
@@ -314,6 +333,11 @@ summarize_simdata <- function(data, save = FALSE, ...) {
   km_plot <- plot_km(km_fits) + coord_cartesian(xlim = c(0, 10))
   km_quantiles <- summarize_km(km_fits)
   
+  # Compare to RWD
+  if (!is.null(km_rwd)) {
+    km_plot_rwd_v_sim <- plot_km2(km_fits[[3]]$fit, km_rwd)
+  }
+  
   # Return and optionally save
   res <- list(
     latent_surv_plot = latent_surv_plot,
@@ -322,6 +346,7 @@ summarize_simdata <- function(data, save = FALSE, ...) {
     latent_entry_plot = latent_entry_plot,
     stratified_entry_plot = stratified_entry_plot,
     km_plot = km_plot,
+    km_plot_rwd_v_sim = km_plot_rwd_v_sim,
     km_quantiles = km_quantiles
   )
   
@@ -342,6 +367,9 @@ save_simdata <- function(object, name = NULL) {
   write.csv(object$prop_truncated, paste0(tbl_path, "prop_truncated.csv"))
   ggsave(paste0(fig_path, "km_plot.pdf"), 
          object$km_plot, 
+         height = 5, width = 7)
+  ggsave(paste0(fig_path, "km_plot_rwd_v_sim.pdf"), 
+         object$km_plot_rwd_v_sim, 
          height = 5, width = 7)
   write.csv(object$km_quantiles, paste0(tbl_path, "km_quantiles.csv"))
   saveRDS(object$data, paste0(output_path, "data.rds"))

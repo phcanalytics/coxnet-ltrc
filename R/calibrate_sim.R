@@ -12,7 +12,7 @@ fit_survregs <- function(f, data){
   return(fits)
 }
 
-plot_cumhaz <- function(data){
+plot_cumhaz <- function(data, grp = NULL){
   # Mnual line and colors
   model_names <- unique(data$model)
   n_models <-length(model_names)
@@ -22,11 +22,17 @@ plot_cumhaz <- function(data){
   names(linetypes) <- names(colors) <- c("Kaplan-Meier", parametric_model_names)
   
   # Plot
-  ggplot(data, aes(x = time/365.25, y = est, col = model,
-                   linetype = model)) +
-    geom_line() + xlab("Time") + ylab("Cumulative hazard") +
+  p <- ggplot(data, aes(x = time/365.25, y = est, col = model,
+              linetype = model)) +
+    geom_line() + xlab("Years") + ylab("Cumulative hazard") +
     scale_color_manual(name = "", values = colors) +
-    scale_linetype_manual(name = "", values = linetypes) 
+    scale_linetype_manual(name = "", values = linetypes) +
+    theme(legend.position = "bottom")
+  
+  if (!is.null(grp)) {
+    p <- p + facet_wrap(grp)
+  }
+  return(p)
 }
 
 compare_survregs <- function(fits, km){
@@ -93,6 +99,15 @@ make_survregs <- function(survregfits, coxfit){
   return(fits)
 }
 
+plot_cumhaz_rc_os <- function(cumhaz_rc, cumhaz_os) {
+  pdata <- rbind(
+    as.data.table(cumhaz_rc)[, facet := "Followup"],
+    as.data.table(cumhaz_os)[, facet := "Overall survival"]
+  )
+  pdata[, facet := factor(facet, labels = c("Overall survival", "Followup"))]
+  plot_cumhaz(pdata, grp = "facet")
+}
+
 #' @export
 calibrate_sim <- function(f, data){
   xy <- make_xy(data, f)
@@ -102,18 +117,29 @@ calibrate_sim <- function(f, data){
   }
   
   # Overall survival
-  f_os <- survival::Surv(entry_days_dx, os_days_dx, died) ~ .
-  os_km <- survival::survfit(make_f(f_os, ~1), data) 
-  os_base <- fit_survregs(make_f(f_os, ~1), data)
-  os_cox <- survival::coxph(make_f(f_os, f), data)
-  os_comparisons <- compare_survregs(os_base, os_km)
+  f_os1 <- survival::Surv(os_days_dx, died) ~ .
+  f_os2 <- survival::Surv(entry_days_dx, os_days_dx, died) ~ .
+  os_km <- list(
+    rc = survival::survfit(make_f(f_os1, ~1), data),
+    ltrc = survival::survfit(make_f(f_os2, ~1), data)
+  )
+  os_base <- fit_survregs(make_f(f_os2, ~1), data)
+  os_cox <- survival::coxph(make_f(f_os2, f), data)
+  os_comparisons <- compare_survregs(os_base, os_km$ltrc)
   
   # Right censoring
-  f_rc <- survival::Surv(entry_days_dx, os_days_dx, 1 - died) ~ .
-  rc_km <- survival::survfit(make_f(f_rc, ~1), data) 
-  rc_base <- fit_survregs(make_f(f_rc, ~1), data)
-  rc_cox <- survival::coxph(make_f(f_rc, f), data) 
-  rc_comparisons <- compare_survregs(rc_base, rc_km)
+  f_rc1 <- survival::Surv(entry_days_dx, 1 - died) ~ .
+  f_rc2 <- survival::Surv(entry_days_dx, os_days_dx, 1 - died) ~ .
+  rc_km <- list(
+    rc = survival::survfit(make_f(f_rc1, ~1), data) ,
+    ltrc = survival::survfit(make_f(f_rc2, ~1), data) 
+  )
+  rc_base <- fit_survregs(make_f(f_rc2, ~1), data)
+  rc_cox <- survival::coxph(make_f(f_rc2, f), data) 
+  rc_comparisons <- compare_survregs(rc_base, rc_km$ltrc)
+  
+  # Combined overall survival and right censoring
+  cumhaz_plot <- plot_cumhaz_rc_os(rc_comparisons$cumhaz, os_comparisons$cumhaz)
   
   # Return
   res <- list(os_km = os_km,
@@ -123,6 +149,7 @@ calibrate_sim <- function(f, data){
               rc_base = rc_base,
               rc_cox = rc_cox,
               rc_comparisons = rc_comparisons,
+              cumhaz_plot = cumhaz_plot,
               xy = xy,
               formula = f)
   return(res)

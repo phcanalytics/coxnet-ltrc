@@ -114,17 +114,17 @@ rm(test_data)
 # Calibrate simulation ---------------------------------------------------------
 sim_settings <- calibrate_sim(f_small, data = data)
 
-# Cumulative hazard plot comparing different parametric models
-# with Kaplan-Meier estimator
+# Save cumulative hazard plot
 ggsave("figs/sim_calibration_cumhaz.pdf", 
-       sim_settings$os_comparisons$cumhaz_plot,
-       height = 5, width = 7)
+       sim_settings$cumhaz_plot,
+       height = 5, width = 10)
 
 # Example simulated data -------------------------------------------------------
 # No predictors (intercept only model)
 params <- set_params(sim_settings = sim_settings, dist = "weibullPH")
-simdata <- sim_survdata(params = params, n_pats = 5000)
-simdata_summary <- summarize_simdata(simdata, save = TRUE, name = "int")
+simdata <- sim_survdata(params = params, n_pats = 10000)
+simdata_summary <- summarize_simdata(simdata, km_rwd = sim_settings$os_km$rc,  
+                                     save = TRUE, name = "int")
 
 # Now include predictors (and hence create informative censoring when
 # using the Kaplan-Meier estimator). The design matrix X and parameters will 
