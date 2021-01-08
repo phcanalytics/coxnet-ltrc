@@ -401,7 +401,7 @@ ggsave("figs/calibration_coxlasso.pdf", p_cal_coxlasso, width = 7, height = 9)
 
 # Save text statistics ---------------------------------------------------------
 txt$propTruncatedSim <- formatC(simdata_summary_p11$prop_truncated, 
-                                format = "f", digits = 3)
+                                format = "f", digits = 2)
 txt$nPatients <- formatC(nrow(data), format = "d", big.mark = ",")
 txt$nDeaths <- formatC(n_deaths, format = "d", big.mark = ",")
 txt$maxP <- formatC(as.integer(max_p), format = "d", big.mark = ",")

@@ -1,3 +1,4 @@
+\def \propTruncatedSim{0.59}
 \def \nPatients{4,429}
 \def \nDeaths{1,838}
 \def \maxP{122}
