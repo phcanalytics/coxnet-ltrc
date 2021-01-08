@@ -336,6 +336,8 @@ summarize_simdata <- function(data, km_rwd = NULL, save = FALSE, ...) {
   # Compare to RWD
   if (!is.null(km_rwd)) {
     km_plot_rwd_v_sim <- plot_km2(km_fits[[3]]$fit, km_rwd)
+  } else {
+    km_plot_rwd_v_sim <- NULL
   }
   
   # Return and optionally save
@@ -368,9 +370,11 @@ save_simdata <- function(object, name = NULL) {
   ggsave(paste0(fig_path, "km_plot.pdf"), 
          object$km_plot, 
          height = 5, width = 7)
-  ggsave(paste0(fig_path, "km_plot_rwd_v_sim.pdf"), 
-         object$km_plot_rwd_v_sim, 
-         height = 5, width = 7)
+  if (!is.null(object$km_plot_rwd_v_sim)) {
+    ggsave(paste0(fig_path, "km_plot_rwd_v_sim.pdf"), 
+           object$km_plot_rwd_v_sim, 
+           height = 5, width = 7) 
+  }
   write.csv(object$km_quantiles, paste0(tbl_path, "km_quantiles.csv"))
   saveRDS(object$data, paste0(output_path, "data.rds"))
 }
