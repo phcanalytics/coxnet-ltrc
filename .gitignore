@@ -10,4 +10,5 @@ output
 *.Rproj
 cache
 renv/.gitignore
+.DS_Store
 !output/README

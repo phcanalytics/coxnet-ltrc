@@ -114,25 +114,26 @@ rm(test_data)
 # Calibrate simulation ---------------------------------------------------------
 sim_settings <- calibrate_sim(f_small, data = data)
 
-# Cumulative hazard plot comparing different parametric models
-# with Kaplan-Meier estimator
+# Save cumulative hazard plot
 ggsave("figs/sim_calibration_cumhaz.pdf", 
-       sim_settings$os_comparisons$cumhaz_plot,
-       height = 5, width = 7)
+       sim_settings$cumhaz_plot,
+       height = 5, width = 10)
 
 # Example simulated data -------------------------------------------------------
 # No predictors (intercept only model)
 params <- set_params(sim_settings = sim_settings, dist = "weibullPH")
-simdata <- sim_survdata(params = params, n_pats = 5000)
-simdata_summary <- summarize_simdata(simdata, save = TRUE, name = "int")
+simdata <- sim_survdata(params = params, n_pats = 10000)
+simdata_summary_int <- summarize_simdata(simdata, km_rwd = sim_settings$os_km$rc,  
+                                        save = TRUE, name = "int")
 
 # Now include predictors (and hence create informative censoring when
 # using the Kaplan-Meier estimator). The design matrix X and parameters will 
 # be used in the simulations that follow
-x_sim <- sim_x(n_pats = 5000, sim_settings, p_bin = 10)
+x_sim <- sim_x(n_pats = 5000, sim_settings, p_bin = 0)
 params <- set_params(x_sim, sim_settings, dist = "weibullPH")
 simdata <- sim_survdata(x_sim, params)
-simdata_summary <- summarize_simdata(simdata, save = TRUE, name = "p10")
+simdata_summary_p11 <- summarize_simdata(simdata, km_rwd = sim_settings$os_km$rc,
+                                         save = TRUE, name = "p11")
 
 # Run simulation for unpenalized Cox model -------------------------------------
 sim_coxph_p21 <- xfun::cache_rds({
@@ -399,6 +400,8 @@ p_cal_coxlasso <- ggarrange(p_cal_coxlasso_small, p_cal_coxlasso_large,
 ggsave("figs/calibration_coxlasso.pdf", p_cal_coxlasso, width = 7, height = 9)
 
 # Save text statistics ---------------------------------------------------------
+txt$propTruncatedSim <- formatC(simdata_summary_p11$prop_truncated, 
+                                format = "f", digits = 2)
 txt$nPatients <- formatC(nrow(data), format = "d", big.mark = ",")
 txt$nDeaths <- formatC(n_deaths, format = "d", big.mark = ",")
 txt$maxP <- formatC(as.integer(max_p), format = "d", big.mark = ",")
