@@ -405,10 +405,10 @@
     },
     "glmnet": {
       "Package": "glmnet",
-      "Version": "4.0-13",
+      "Version": "4.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "0f8aa59254c1cb06a1932cd926946a21"
+      "Hash": "d5d038d2f66d7ed2f95045c62d42e7b4"
     },
     "globals": {
       "Package": "globals",
