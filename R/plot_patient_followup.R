@@ -5,12 +5,14 @@
 #' @export
 plot_patient_followup <- function(){
   dat <- data.frame(ID = c(1:7), event = c(0, 1, 1, 1, 0, 0, 0),  # c(7, 1, 3, 4, 2, 6, 5)
-                    t1 = c(1991, 2008, 1993, 2007, 2012, 2014, 1989),
+                    t1 = c(1991, 2008, 1993, 2007, 2010, 2012, 1989),
                     t2 = c(1998, 2009, 2013, 2017, 2019, 2019, 2019), 
+                    t3 = c(NA, NA, 2011, 2011, 2014, 2014, 2015),
+                    t4 = c(1998, 2009, 2011, 2011, 2014, 2014, 2015),
                     #t1 = c(1989, 1991, 1993, 2007, 2008, 2012, 2014), 
-                   # t2 = c(2019, 1998, 2013, 2017, 2009, 2019, 2019), 
-                   censored = c(0, 1, 0, 0, 1, 1, 1))
-                   # censored = c(1, 0, 0, 0, 1, 1, 1)) #, .Names = c("ID", "Death", "t1", "t2", "Censored")) #, class = "data.frame", row.names = c(NA, -6L))
+                    # t2 = c(2019, 1998, 2013, 2017, 2009, 2019, 2019), 
+                    censored = c(0, 1, 0, 0, 1, 1, 1))
+  # censored = c(1, 0, 0, 0, 1, 1, 1)) #, .Names = c("ID", "Death", "t1", "t2", "Censored")) #, class = "data.frame", row.names = c(NA, -6L))
   
   # Create event variable
   #dat$Death <- with(dat, ifelse(Death, "Dead", "Censored"))
@@ -25,9 +27,11 @@ plot_patient_followup <- function(){
            dplyr::mutate(left_truncated=ifelse(t2<2011,"Left truncated","Included in study")),
          aes(x = id.ordered),group=id.ordered) + 
     # Plot solid line representing non-interval censored time from 0 to t1
-    geom_linerange(aes(ymin = t1, ymax = t2, col=left_truncated)) + 
+    geom_linerange(aes(ymin = t1, ymax = t4, col=left_truncated), linetype="dashed") + 
+    geom_linerange(aes(ymin = t4, ymax = t2, col=left_truncated)) + 
     geom_point(aes(id.ordered, t2,shape=factor(censored),col=left_truncated)) + 
     geom_point(aes(id.ordered, t1, col=left_truncated)) +
+    geom_point(aes(id.ordered, t3, shape="Milestone"), size=2, col="black") +
     # Plot line (dotted for censored time) representing time from t1 to t2
     #geom_linerange(aes(ymin = t1, ymax = t2, linetype = as.factor(Censored))) +  
     # Plot points representing event
@@ -35,14 +39,16 @@ plot_patient_followup <- function(){
     coord_flip() + 
     scale_color_manual("Left truncation",values=c("black","indianred"))+
     # Add custom shape scale.  Change the values to get different shapes.
-    scale_shape_manual(name = "Event", values = c(1, 4)) +
+    scale_shape_manual(name = "Event", values = c(1, 4, 17)) +
     # Add main title and axis labels
     xlab("Patient ID") +  ylab("Year of diagnosis") + 
-    geom_hline(yintercept = 2011, linetype="dashed", col="dodgerblue") +
-    annotate("text", x = 7, y = 2014.5, 
-             label = "Study start", color="dodgerblue", 
-             size=4 , angle=0, fontface="bold")+
-    # I think the bw theme looks better for this graph, 
+    # geom_hline(yintercept = 2010, linetype="dashed", col="dodgerblue") +
+    # annotate("text", x = 7, y = 2014.5,
+    #          label = "Study start", color="dodgerblue",
+    #          size=4 , angle=0, fontface="bold")+
+    # I think the bw theme looks better for this graph,
     # but leave it out if you prefer the default theme
-    theme_bw()
+    theme_bw()+
+    theme(panel.grid.major.x = element_blank(),
+          panel.grid.minor.x = element_blank())
 }
