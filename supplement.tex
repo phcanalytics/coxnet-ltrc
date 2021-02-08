@@ -5,6 +5,7 @@
 
 % Basic packages
 \usepackage[margin=1in] { geometry }
+\usepackage{authblk}
 
 % Figures
 \usepackage[font={bf}]{caption}
@@ -15,7 +16,19 @@
 
 % Title
 \title{Supplemental Appendix: Penalized regression for left-truncated and right-censored survival data}
-\author{Author list}
+
+\newcommand*\samethanks[1][\value{footnote}]{\footnotemark[#1]}
+
+\author[1]{Sarah F. McGough\thanks{Contributed equally.}}
+\author[1]{Devin Incerti\samethanks}
+\author[1]{Svetlana Lyalina}
+\author[1]{Ryan Copping}
+\author[2, 3]{Balasubramanian Narasimhan}
+\author[2, 3]{Robert Tibshirani}
+\affil[1]{Genentech, Inc, South San Francisco, CA, USA}
+\affil[2]{Department of Statistics, Stanford University, Stanford, CA, USA}
+\affil[3]{Department of Biomedical Data Sciences, Stanford University, Stanford, CA, USA}
+
 \date{\today}
 
 \begin{document}
