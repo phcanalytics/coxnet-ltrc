@@ -18,7 +18,7 @@ library("rngtools") # Required by dorng
 library("rsample")
 library("survival")
 library("tidyr") # (>= 1.0.0) for pivot_longer() and pivot_wider()
-library("xfun") # (>= 0.13.0) for cache_rds()
+# library("xfun") # We will use xfun::cache_rds() below, but not attach the package here
 library("xtable")
 
 # Sourced R files
@@ -112,7 +112,11 @@ rm(train_data)
 rm(test_data)
 
 # Calibrate simulation ---------------------------------------------------------
-sim_settings <- calibrate_sim(f_small, data = data)
+if (file.exists("sim_settings.rds")) { # Interested readers can run this
+  sim_settings <- readRDS("sim_settings.rds")
+} else { # This setting is run for the paper
+  sim_settings <- calibrate_sim(f_small, data = data, store_x = TRUE)
+}
 
 # Save cumulative hazard plot
 ggsave("figs/sim_calibration_cumhaz.pdf", 
