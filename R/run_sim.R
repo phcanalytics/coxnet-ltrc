@@ -21,9 +21,15 @@ sim_vars <- function(n_pats, K){
 #' @export
 sim_x <- function(n_pats = 1000, sim_settings, p_bin) {
   # RWD
-  rows_to_sample <- sample.int(n = nrow(sim_settings$xy$x), 
-                               size = n_pats, replace = TRUE)
-  X <- sim_settings$xy$x[rows_to_sample, ]
+  if (!is.null(sim_settings[["x"]])) { # Bootstrap observed data if exists
+    rows_to_sample <- sample.int(n = nrow(sim_settings$x), 
+                                 size = n_pats, replace = TRUE)
+    X <- sim_settings$x[rows_to_sample, ]
+  } else { # Otherwise sample from multivariate normal distribution
+    X <- mvtnorm::rmvnorm(n_pats, mean = sim_settings$x_mean, 
+                          sigma = sim_settings$x_vcov)
+  }
+
   n_rwdvars <- ncol(X)
   rwd_type <- rep("RWD", ncol(X))
   attr(X, "type") <- rwd_type

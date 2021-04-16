@@ -9,6 +9,7 @@ fit_survregs <- function(f, data){
   }
   fits$survspline <- flexsurv::flexsurvspline(f, data = data, k = 1)
   fits$survspline$pretty_dist <- "Spline"
+  
   return(fits)
 }
 
@@ -93,7 +94,6 @@ make_survregs <- function(survregfits, coxfit){
     fits[[i]]$coefs <- add_coef(survregfits[[i]], stats::coef(coxfit))
     fits[[i]]$knots <- survregfits[[i]]$knots  
     fits[[i]]$dlist <- survregfits[[i]]$dlist
-    browser()
   }
   names(fits) <- names(survregfits)
   return(fits)
@@ -108,8 +108,27 @@ plot_cumhaz_rc_os <- function(cumhaz_rc, cumhaz_os) {
   plot_cumhaz(pdata, grp = "facet")
 }
 
+remove_model_data <- function(object, ...) {
+  UseMethod("remove_model_data")
+}
+
+remove_model_data.default <- function(object, ...) {
+  return(object)
+}
+
+remove_model_data.flexsurvreg <- function(object, ...) {
+  object$data$Y <- NULL
+  object$data$m <- NULL
+  # Model has no covariates so we can keep object$data$ml
+  return(object)
+}
+
+remove_model_data.list <- function(object, ...) {
+  lapply(object, remove_model_data)
+}
+
 #' @export
-calibrate_sim <- function(f, data){
+calibrate_sim <- function(f, data, store_x = TRUE){
   xy <- make_xy(data, f)
   
   make_f <- function(f_lhs, f_rhs){
@@ -124,7 +143,7 @@ calibrate_sim <- function(f, data){
     ltrc = survival::survfit(make_f(f_os2, ~1), data)
   )
   os_base <- fit_survregs(make_f(f_os2, ~1), data)
-  os_cox <- survival::coxph(make_f(f_os2, f), data)
+  os_cox <- survival::coxph(make_f(f_os2, f), data, x = FALSE, y = FALSE)
   os_comparisons <- compare_survregs(os_base, os_km$ltrc)
   
   # Right censoring
@@ -135,11 +154,12 @@ calibrate_sim <- function(f, data){
     ltrc = survival::survfit(make_f(f_rc2, ~1), data) 
   )
   rc_base <- fit_survregs(make_f(f_rc2, ~1), data)
-  rc_cox <- survival::coxph(make_f(f_rc2, f), data) 
+  rc_cox <- survival::coxph(make_f(f_rc2, f), data, x = FALSE, y = FALSE) 
   rc_comparisons <- compare_survregs(rc_base, rc_km$ltrc)
   
   # Combined overall survival and right censoring
   cumhaz_plot <- plot_cumhaz_rc_os(rc_comparisons$cumhaz, os_comparisons$cumhaz)
+
   
   # Return
   res <- list(os_km = os_km,
@@ -150,7 +170,19 @@ calibrate_sim <- function(f, data){
               rc_cox = rc_cox,
               rc_comparisons = rc_comparisons,
               cumhaz_plot = cumhaz_plot,
-              xy = xy,
               formula = f)
+  
+  ## Remove data from any models because we can't share it
+  res <- lapply(res, remove_model_data)
+  
+  ## Add x information (only use mean/covariance when sharing)
+  if (store_x) {
+    res <- c(res, list(x = xy$x))
+  } else {
+    x_mean <- apply(xy$x, 2, mean)
+    x_vcov <- stats::cov(xy$x)
+    res <- c(res, list(x_mean = x_mean, x_vcov = x_vcov))
+  }
+  
   return(res)
 }
