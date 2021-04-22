@@ -108,25 +108,6 @@ plot_cumhaz_rc_os <- function(cumhaz_rc, cumhaz_os) {
   plot_cumhaz(pdata, grp = "facet")
 }
 
-remove_model_data <- function(object, ...) {
-  UseMethod("remove_model_data")
-}
-
-remove_model_data.default <- function(object, ...) {
-  return(object)
-}
-
-remove_model_data.flexsurvreg <- function(object, ...) {
-  object$data$Y <- NULL
-  object$data$m <- NULL
-  # Model has no covariates so we can keep object$data$ml
-  return(object)
-}
-
-remove_model_data.list <- function(object, ...) {
-  lapply(object, remove_model_data)
-}
-
 #' @export
 calibrate_sim <- function(f, data, store_x = TRUE){
   xy <- make_xy(data, f)
@@ -154,26 +135,33 @@ calibrate_sim <- function(f, data, store_x = TRUE){
     ltrc = survival::survfit(make_f(f_rc2, ~1), data) 
   )
   rc_base <- fit_survregs(make_f(f_rc2, ~1), data)
-  rc_cox <- survival::coxph(make_f(f_rc2, f), data, x = FALSE, y = FALSE) 
   rc_comparisons <- compare_survregs(rc_base, rc_km$ltrc)
   
   # Combined overall survival and right censoring
   cumhaz_plot <- plot_cumhaz_rc_os(rc_comparisons$cumhaz, os_comparisons$cumhaz)
-
   
-  # Return
+  # Create object to return
+  ## Only keep information from "flexsurvreg" objects that is needed 
+  ## (since we can't share raw data)
+  subset_flexsurvreg <- function (x) {
+    lapply(x, function (z) {
+      return(z[c("dlist","res.t")]) 
+    })
+  }
+  os_base <- subset_flexsurvreg(os_base)
+  rc_base <- subset_flexsurvreg(rc_base)
+  
+  
+  ## Create the list
   res <- list(os_km = os_km,
               os_base = os_base,
-              os_cox = os_cox,
+              os_coef = stats::coef(os_cox),
               os_comparisons = os_comparisons,
               rc_base = rc_base,
-              rc_cox = rc_cox,
               rc_comparisons = rc_comparisons,
               cumhaz_plot = cumhaz_plot,
               formula = f)
   
-  ## Remove data from any models because we can't share it
-  res <- lapply(res, remove_model_data)
   
   ## Add x information (only use mean/covariance when sharing)
   if (store_x) {
@@ -184,5 +172,6 @@ calibrate_sim <- function(f, data, store_x = TRUE){
     res <- c(res, list(x_mean = x_mean, x_vcov = x_vcov))
   }
   
+  ## Return
   return(res)
 }

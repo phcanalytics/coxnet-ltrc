@@ -47,7 +47,6 @@ sim_x <- function(n_pats = 1000, sim_settings, p_bin) {
 set_beta <- function(X, sim_settings, dist) {
   
   basefit <- sim_settings$os_base[[dist]]
-  coxfit = sim_settings$os_cox
   
   type <- attr(X, "type")
   beta <- rep(NA, length(type))
@@ -57,7 +56,7 @@ set_beta <- function(X, sim_settings, dist) {
   rwd_index <- which(type == "RWD")
   name <- basefit$dlist$location
   pos <- which(basefit$dlist$pars == name)
-  beta[rwd_index] <- stats::coef(coxfit)
+  beta[rwd_index] <- sim_settings$os_coef
   
   ## Binary variables
   which_bin <- which(type == "Binary")
@@ -98,7 +97,7 @@ predict_location <- function(intercept, beta = NULL, X = NULL, inv_transforms){
 }
 
 surv_rng <- function(n, beta, basefit, X){
-  
+
   # Location parameter
   loc_pos <- which(basefit$dlist$pars == basefit$dlist$location)
   loc_name <- basefit$dlist$pars[loc_pos]
