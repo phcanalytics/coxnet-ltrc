@@ -145,7 +145,7 @@ calibrate_sim <- function(f, data, store_x = TRUE){
   ## (since we can't share raw data)
   subset_flexsurvreg <- function (x) {
     lapply(x, function (z) {
-      return(z[c("dlist","res.t")]) 
+      return(z[c("dlist", "res.t")]) 
     })
   }
   os_base <- subset_flexsurvreg(os_base)
