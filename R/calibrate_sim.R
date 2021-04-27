@@ -9,6 +9,7 @@ fit_survregs <- function(f, data){
   }
   fits$survspline <- flexsurv::flexsurvspline(f, data = data, k = 1)
   fits$survspline$pretty_dist <- "Spline"
+  
   return(fits)
 }
 
@@ -93,7 +94,6 @@ make_survregs <- function(survregfits, coxfit){
     fits[[i]]$coefs <- add_coef(survregfits[[i]], stats::coef(coxfit))
     fits[[i]]$knots <- survregfits[[i]]$knots  
     fits[[i]]$dlist <- survregfits[[i]]$dlist
-    browser()
   }
   names(fits) <- names(survregfits)
   return(fits)
@@ -109,7 +109,7 @@ plot_cumhaz_rc_os <- function(cumhaz_rc, cumhaz_os) {
 }
 
 #' @export
-calibrate_sim <- function(f, data){
+calibrate_sim <- function(f, data, store_x = TRUE){
   xy <- make_xy(data, f)
   
   make_f <- function(f_lhs, f_rhs){
@@ -124,7 +124,7 @@ calibrate_sim <- function(f, data){
     ltrc = survival::survfit(make_f(f_os2, ~1), data)
   )
   os_base <- fit_survregs(make_f(f_os2, ~1), data)
-  os_cox <- survival::coxph(make_f(f_os2, f), data)
+  os_cox <- survival::coxph(make_f(f_os2, f), data, x = FALSE, y = FALSE)
   os_comparisons <- compare_survregs(os_base, os_km$ltrc)
   
   # Right censoring
@@ -135,22 +135,43 @@ calibrate_sim <- function(f, data){
     ltrc = survival::survfit(make_f(f_rc2, ~1), data) 
   )
   rc_base <- fit_survregs(make_f(f_rc2, ~1), data)
-  rc_cox <- survival::coxph(make_f(f_rc2, f), data) 
   rc_comparisons <- compare_survregs(rc_base, rc_km$ltrc)
   
   # Combined overall survival and right censoring
   cumhaz_plot <- plot_cumhaz_rc_os(rc_comparisons$cumhaz, os_comparisons$cumhaz)
   
-  # Return
+  # Create object to return
+  ## Only keep information from "flexsurvreg" objects that is needed 
+  ## (since we can't share raw data)
+  subset_flexsurvreg <- function (x) {
+    lapply(x, function (z) {
+      return(z[c("dlist", "res.t")]) 
+    })
+  }
+  os_base <- subset_flexsurvreg(os_base)
+  rc_base <- subset_flexsurvreg(rc_base)
+  
+  
+  ## Create the list
   res <- list(os_km = os_km,
               os_base = os_base,
-              os_cox = os_cox,
+              os_coef = stats::coef(os_cox),
               os_comparisons = os_comparisons,
               rc_base = rc_base,
-              rc_cox = rc_cox,
               rc_comparisons = rc_comparisons,
               cumhaz_plot = cumhaz_plot,
-              xy = xy,
               formula = f)
+  
+  
+  ## Add x information (only use mean/covariance when sharing)
+  if (store_x) {
+    res <- c(res, list(x = xy$x))
+  } else {
+    x_mean <- apply(xy$x, 2, mean)
+    x_vcov <- stats::cov(xy$x)
+    res <- c(res, list(x_mean = x_mean, x_vcov = x_vcov))
+  }
+  
+  ## Return
   return(res)
 }
