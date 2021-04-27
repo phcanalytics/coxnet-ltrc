@@ -1,8 +1,8 @@
-\def \propTruncatedSim{0.59}
+\def \propTruncatedSim{0.58}
 \def \nPatients{4,429}
-\def \nDeaths{1,838}
-\def \maxP{122}
+\def \nDeaths{1,846}
+\def \maxP{123}
 \def \corrDxYear{-0.63}
 \def \entryMoreOneYear{21.5\%}
-\def \nCovsLarge{639}
-\def \nTrainSmall{3,022}
+\def \nCovsLarge{636}
+\def \nTrainSmall{3,026}
