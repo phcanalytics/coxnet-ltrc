@@ -12,7 +12,7 @@ source("01-setup.R")
 source("02-simulation.R")
 ```
 
-Note, however, that these simulations are slightly different than what is reported in the paper because we report results from simulations in which the the features of the input matrix based on the CGDB data were randomly drawn from replacement from the raw data; in the executable version of the simulations, the (standardized) CGDB based features are drawn from a multivariate normal distribution.
+Note, however, that these simulations are slightly different than what is reported in the paper because we report results from simulations in which the the features of the input matrix based on the CGDB data were randomly drawn from replacement from the raw data; in the executable version of the simulations, the (standardized) CGDB based features are drawn from a multivariate normal distribution. Furthermore, parallel computing is used to speed up the simulations, so the parallelization settings specified in `01-setup.R` may need to be modified for a users computing environment.
 
 ## Dependencies
 R package dependencies are managed through the [`renv`](https://rstudio.github.io/renv/articles/renv.html) package. You can view all packages and their versions in the lockfile [`renv.lock`](renv.lock). All required packages and the appropriate versions can be installed with `renv::restore()`. 
