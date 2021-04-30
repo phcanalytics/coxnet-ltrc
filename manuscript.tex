@@ -250,13 +250,13 @@ In the absence of left truncation, the risk set $R_i = \{ j : y_j \geq t_i \}$ a
 \begin{figure}[h]
 \centering
 \includegraphics[max size={\textwidth}{\textheight}]{figs/followup.pdf} 
-\caption{Left-truncated and right-censored patient follow-up in a hypothetical study cohort, ordered chronologically by event time. Patients who receive a diagnosis (closed circle) become eligible to enter the cohort after reaching a milestone (black triangle), for example a genomic test. Patients are followed until death (open circle) or censoring (cross). However, patients who die before reaching the milestone are left-truncated (in red), and only those who have survived until eligibility (in black) are observed. Left truncation time, or the time between diagnosis and cohort entry, is shown with a dashed line.}
+\caption{Left-truncated and right-censored patient follow-up in a hypothetical study cohort, ordered chronologically by event time. Patients who receive a diagnosis (closed circle) become eligible to enter the cohort after reaching a milestone (black triangle), for example a genomic test. Patients are followed until death (open circle) or censoring (cross). However, patients who die before reaching the milestone are left-truncated (in red), and only those who have survived until eligibility (in black) are observed. Left truncation time, or the time between diagnosis and cohort entry, is shown with a dashed line. Left truncation time is also referred to as ``entry time.''}
 \label{fig:followup}
 \end{figure}
 
 Survival is defined as the time from diagnosis until death, but patients are not eligible to enter the cohort until a milestone is reached (black triangle). Patients 1 and 2 (in red) are excluded from the analysis because of death and right censoring, respectively, prior to study eligibility. A naive analysis on this data would therefore be biased because it only contains survival time for ``super-survivors'' (those who have survived a long time, such as patients 3 and 7) and the recently-diagnosed. 
 
-Fortunately, the partial likelihood can be easily modified to make $R_i$ the set of individuals who are at risk (have entered the study and are not censored or failed) at that time. Let individual $i$ have survival data of the form $(v_i, y_i, e_i, x_i)$, where individual $i$ enters the study at time $v_i$. The left-truncated risk set $R_{i\ast} = \{ j : y_j \geq t_i > v_j \}$. In other words, subjects are only considered at risk at a given event time after they have been observed to be at risk (i.e. exceeded their left truncation time, shown with a solid black line in \autoref{fig:followup} ). For example, at the time of death of Patient 3 in \autoref{fig:followup} , only Patient 4 has reached the milestone for study entry and is at risk. Patients 5, 6, and 7 reach their milestones at later time points.
+Fortunately, the partial likelihood can be easily modified to make $R_i$ the set of individuals who are at risk (have entered the study and are not censored or failed) at that time. Let individual $i$ have survival data of the form $(v_i, y_i, e_i, x_i)$, where individual $i$ enters the study at time $v_i$. Time $v_i$ is the left truncation time, also referenced in this text as entry time. The left-truncated risk set $R_{i\ast} = \{ j : y_j \geq t_i > v_j \}$. In other words, subjects are only considered at risk at a given event time after they have been observed to be at risk (i.e. exceeded their left truncation time / passed milestone entry time, shown with a solid black line in \autoref{fig:followup} ). For example, at the time of death of Patient 3 in \autoref{fig:followup} , only Patient 4 has reached the milestone for study entry and is at risk. Patients 5, 6, and 7 reach their milestones at later time points.
 
 The partial likelihood in \autoref{eqn:cox1972} can then be evaluated by substituting $R_{i\ast}$ to make inferences on $\beta$ in the case of left truncation. 
 
@@ -291,7 +291,7 @@ As shown in \autoref{fig:left-trunc-time}, the distribution of left truncation t
 \begin{figure}[h]
  \centering
 \includegraphics[max size={\textwidth}]{figs/left_trunc_hist.pdf} 
-\caption{Distribution of left truncation time (days) in non-small cell lung cancer patients in the CGDB}
+\caption{Distribution of left truncation time (days) in non-small cell lung cancer patients in the CGDB.}
  \label{fig:left-trunc-time}
 \end{figure}
 
