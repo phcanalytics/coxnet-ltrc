@@ -1,0 +1,132 @@
+---
+title: "Example penalized LTRC survival model with simulated data"
+author: "McGough et al"
+date: "6/17/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+This is a brief guide to implementing a penalized survival model for left-truncated and right-censored data (LTRC), described in McGough *et al.* 2021. This vignette uses simulated data based on the Foundation Medicine and Flatiron Health Clinico-Genomic Database (CGDB), as described in the paper [repository](https://github.com/phcanalytics/coxnet-ltrc).
+
+## Load Data and Setup
+
+The simulated data of interest, `simdata`, contains 5000 patients and 18 variables.
+
+```{r}
+# Setup and Simulations --------------------------------------------------------
+
+library(dplyr) 
+library(glmnet)
+library(ggplot2)
+library(knitr)
+library(rsample)
+library(rmarkdown)
+
+source("R/run_sim.R")
+source("R/calibrate.R")
+
+# Read data
+sim_settings <- readRDS("sim_settings.rds")
+params <- set_params(sim_settings = sim_settings, dist = "weibullPH")
+simdata <- sim_survdata(params = params, n_pats = 10000)
+
+head(simdata)
+```
+
+## Prep Model Data
+
+Here we randomly split the simulated data, `simdata`, into train (75%) and test (25%) data. 
+We also only use patients from the simulated data who are alive at entry time (`death_time` >= `entry_time`, approximately 44% of patients).
+Columns 7:17 contain our predictors of interest.
+
+```{r}
+# Filter to patients alive at study entry --------------------------------------
+simdata_sub <- simdata %>% filter(hidden==0)
+
+# Split data -------------------------------------------------------------------
+# Using rsample package
+set.seed(7)
+data_split <- initial_split(simdata_sub, prop = .75)
+train_data <- training(data_split)
+test_data <- testing(data_split)
+
+# Clean up
+rm(data_split)
+```
+
+## Run Model
+
+Here we run a simple example penalized Lasso model for LTRC using `cv.glmnet()` in `glmnet` > 4.1. The lambda which minimizes the partial likelihood deviance (`lambda.min`) is chosen through 5-fold cross-validation. For more details, see the [glmnet homepage](https://glmnet.stanford.edu/articles/Coxnet.html).
+
+```{r}
+# Prep x and y matrices - train
+x_train <- train_data %>% select(7:17) %>% as.matrix()
+y_train <- Surv(train_data$entry_time,
+          train_data$death_time,
+          train_data$dead)
+
+# Repeat for test data
+x_test <- test_data %>% select(7:17) %>% as.matrix()
+y_test <- Surv(test_data$entry_time,
+          test_data$death_time,
+          test_data$dead)
+
+
+# 5-fold CV glmnet
+mod <- cv.glmnet(x_train, y_train, family="cox", nfolds = 5)
+
+```
+
+## Model Coefficients
+
+Choosing the best regularized model using `lambda.min`, we can assess model coefficients, which represent the log hazard ratios:
+```{r}
+coef(mod, s = "lambda.min")
+```
+
+Or alternatively, we may choose the model which minimizes deviance within 1 standard deviation of the minimum `lambda.1se`, which results in a sparser model:
+
+```{r}
+coef(mod, s = "lambda.1se")
+```
+
+The full path of regularization can also be plotted:
+```{r}
+plot(mod)
+```
+
+## Model Predictions and Performance
+
+We will make out-of-sample predictions on the 25% hold-out set using `lambda.min`. 
+```{r}
+predictions <- predict(mod, x_test, s="lambda.min")
+head(predictions)
+```
+
+### C-index
+
+```{r}
+get_cindex <- function(newx, newy, fit, lambda){
+  survival::concordance(newy ~ predict(fit, newx = newx, s = lambda), reverse=TRUE)
+}
+
+get_cindex(x_test, y_test, mod, "lambda.min")
+```
+
+### Calibration
+
+```{r}
+# Predict survival probabilities
+survfit <- survfit(mod, newx = x_test, s="lambda.min", x= x_train, y= y_train)
+
+# Get calibration at time points
+cal <- calibrate.survfit(object = survfit, times = seq(.5, 3, .5), y = y_test)
+
+autoplot.calibrate(cal)
+```
+
