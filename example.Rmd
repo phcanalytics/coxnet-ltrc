@@ -1,132 +1,171 @@
 ---
 title: "Example penalized LTRC survival model with simulated data"
-author: "McGough et al"
-date: "6/17/2021"
-output: pdf_document
+author: "Sarah F. McGough, Devin Incerti, Svetlana Lyalina, Ryan Copping, Balasubramanian Narasimhan, Robert Tibshirani"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: yes
+    toc_depth: 2
+    toc_float: true
+    number_sections: TRUE
 ---
 
 ```{r setup, include=FALSE}
+# So that it can be viewed on GitHub pages, render with:
+# rmarkdown::render(input = "example.Rmd", output_dir = "docs")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Introduction
+# Introduction
+This guide shows how to use penalized survival models for prediction with left-truncated and right-censored data (LTRC) as described in McGough *et al.* 2021. The analyses utilize a simulated dataset based on the Foundation Medicine and Flatiron Health Clinico-Genomic Database (CGDB), as described in the paper.
 
-This is a brief guide to implementing a penalized survival model for left-truncated and right-censored data (LTRC), described in McGough *et al.* 2021. This vignette uses simulated data based on the Foundation Medicine and Flatiron Health Clinico-Genomic Database (CGDB), as described in the paper [repository](https://github.com/phcanalytics/coxnet-ltrc).
+We will use `glmnet` to fit the models, `rsample` to split the data into training and test sets, and various features of the `survival` package. We will also need a script containing custom functions for calibrating survival predictions.
 
-## Load Data and Setup
+```{r, message = FALSE, warning = FALSE}
+# Packages used in this script
+library("glmnet")
+library("rsample")
+library("survival")
 
-The simulated data of interest, `simdata`, contains 5000 patients and 18 variables.
+# Custom functions for calibration
+library("data.table") # Dependency for calibration functions
+library("ggplot2") # Required to visualize calibrations
+source("R/calibrate.R") # Our custom calibration functions
+theme_set(theme_bw()) # ggplot theme
 
-```{r}
-# Setup and Simulations --------------------------------------------------------
+# There is some randomness in the analysis include splitting
+# the data into train/test sets and cross validation.
+set.seed(7) 
+```
 
-library(dplyr) 
-library(glmnet)
-library(ggplot2)
-library(knitr)
-library(rsample)
-library(rmarkdown)
+# LTRC data
+While we are not permitted to share data from the CGDB, we can simulate data that is consistent with what we observe. Our simulated dataset is contained in the file `simdata.rds`. Details on how we simulated the data are described in the paper. If you would like to see the code used to simulate the data you can view/run the file `simdata.R`.  
 
-source("R/run_sim.R")
-source("R/calibrate.R")
-
-# Read data
-sim_settings <- readRDS("sim_settings.rds")
-params <- set_params(sim_settings = sim_settings, dist = "weibullPH")
-simdata <- sim_survdata(params = params, n_pats = 10000)
-
+```{r simdata}
+simdata <- as.data.frame(readRDS("simdata.rds"))
 head(simdata)
 ```
 
-## Prep Model Data
+There are two characteristics of the data that are artificial and would not be observed in reality. First, we simulate (latent) `death_time`, but deaths are only observed if they occur prior to censoring; that is, since the data is right-censored, we only observe `event_time`. Second, some patients are not included in the data (i.e., they are `hidden`), because their `event_time` occurs prior to the time they would have entered the dataset (their `entry_time`). These patients are left-truncated. 
 
-Here we randomly split the simulated data, `simdata`, into train (75%) and test (25%) data. 
-We also only use patients from the simulated data who are alive at entry time (`death_time` >= `entry_time`, approximately 44% of patients).
-Columns 7:17 contain our predictors of interest.
+To create a realistic LTRC dataset we will consequently remove the latent `death_time` variable and subset the data to patients that were not left-truncated.
 
-```{r}
-# Filter to patients alive at study entry --------------------------------------
-simdata_sub <- simdata %>% filter(hidden==0)
+```{r simdataAfterLT}
+simdata <- simdata[simdata$hidden == 0, ]
+simdata$death_time <- NULL
+```
 
-# Split data -------------------------------------------------------------------
-# Using rsample package
-set.seed(7)
-data_split <- initial_split(simdata_sub, prop = .75)
+## Train and test sets
+For prediction problems, it is common to split the data into training and tests sets. Here we use the `rsample` package to randomly split the data so that 75% of patients are in the training set and 25% are in the test set. 
+
+```{r split}
+data_split <- initial_split(simdata, prop = .75)
 train_data <- training(data_split)
 test_data <- testing(data_split)
-
-# Clean up
-rm(data_split)
 ```
 
-## Run Model
+# Model fitting
+## Model data
+### Input matrix
+`glmnet` requires an input matrix `x`, which which must be a `matrix` object. Here we consider a simple example with a small number of predictors contained in `x`.  
 
-Here we run a simple example penalized Lasso model for LTRC using `cv.glmnet()` in `glmnet` > 4.1. The lambda which minimizes the partial likelihood deviance (`lambda.min`) is chosen through 5-fold cross-validation. For more details, see the [glmnet homepage](https://glmnet.stanford.edu/articles/Coxnet.html).
+```{r xvars}
+x_vars <- attr(simdata, "x_vars")
+x_vars
+```
 
-```{r}
-# Prep x and y matrices - train
-x_train <- train_data %>% select(7:17) %>% as.matrix()
-y_train <- Surv(train_data$entry_time,
-          train_data$death_time,
-          train_data$dead)
+We create `x` matrices for both the training and the test sets. 
 
-# Repeat for test data
-x_test <- test_data %>% select(7:17) %>% as.matrix()
+```{r xData}
+x_train <- as.matrix(train_data[, x_vars])
+x_test <- as.matrix(test_data[, x_vars])
+```
+
+### Response
+When fitting Cox proportional hazards models with `glmnet`, the response should be a `survival::Surv` object. The key difference between modeling LTRC and RC data, is that the response must contain start-stop intervals when using LTRC data. Start-stop `Surv` object are created by passing the time that a patient enters the dataset (`time`), the follow-up time (`time2`), and a status indicator equal to 1 if a patient has died and 0 if they are alive. 
+
+As with `x`, we create `y` for both the training and the test sets. 
+
+```{r trainTestData}
+y_train <- Surv(time = train_data$entry_time,
+                time2 = train_data$event_time,
+                event = train_data$dead)
+
 y_test <- Surv(test_data$entry_time,
-          test_data$death_time,
-          test_data$dead)
-
-
-# 5-fold CV glmnet
-mod <- cv.glmnet(x_train, y_train, family="cox", nfolds = 5)
-
+               test_data$event_time,
+               test_data$dead)
 ```
 
-## Model Coefficients
+## Cross validation
+We will fit a penalized Lasso model appropriate for LTRC data using `cv.glmnet()` (note: requires `glmnet` > 4.1). The value of the tuning parameter$\lambda$ that minimizes the partial likelihood deviance (`lambda.min`) is selected using 5-fold cross validation. For more details, see the vignette on the [glmnet website](https://glmnet.stanford.edu/articles/Coxnet.html).
 
-Choosing the best regularized model using `lambda.min`, we can assess model coefficients, which represent the log hazard ratios:
+```{r glmnetCV}
+cvfit <- cv.glmnet(x_train, y_train, family = "cox", nfolds = 5)
+```
+
+## Model coefficients
+The coefficients (i.e., log hazard ratios) depend on the value of $\lambda$. We can easily view the coefficients for a specific value of $\lambda$ using `coef()`. We might want to examine coefficients from a model that minimizes the deviance:
+
+```{r coefLambdaMin}
+coef(cvfit, s = "lambda.min")
+```
+
+Or alternatively, we may choose a model that minimizes deviance within 1 standard deviation of the minimum (`lambda.1se`). Note that this results in a sparser model:
+
+```{r coefLambda1se}
+coef(cvfit, s = "lambda.1se")
+```
+
+The full regularization path can also be plotted:
+
+```{r plotCV}
+plot(cvfit)
+```
+
+# Model predictions and performance
+We will make out-of-sample predictions on the test set (25% of data) from models where the deviance was minimized (`lambda.min`). With survival data, there is no single best way to summarize predictions or to assess the performance of a model. We will first consider the C-index, which is a measure of the extent to which a model can *discriminate* across patients. Then we will examine survival probabilities and the extent to which predicted probabilities are well *calibrated*; that is, the extent to which predicted probabilities are  similar to observed probabilities.
+
+## C-index
+The C-index can be computed from the linear predictor (i.e., the predicted log hazards). By default, the `predict.cv.glmnet()` method predicts the linear predictor for each patient.
+
 ```{r}
-coef(mod, s = "lambda.min")
+lp_test <- predict(cvfit, newx = x_test, s = "lambda.min")
+head(lp_test)
 ```
 
-Or alternatively, we may choose the model which minimizes deviance within 1 standard deviation of the minimum `lambda.1se`, which results in a sparser model:
+The `survival::concordance()` function will compute the C-index in a manner appropriate for LTRC data. When making out of sample predictions, it is convenient to specify the `object` argument as a `formula` that relates the response to the linear predictor.
+
+```{r cindex}
+concordance(y_test ~ lp_test, reverse = TRUE)
+```
+
+## Survival probabilities and calibration
+### Survival probabilities
+Models fit with `glmnet` now have `survfit` method which can be used to generate survival curves. Note that the values of `x` and `y` used to train the model must also be passed so that the baseline hazard can be computed.
 
 ```{r}
-coef(mod, s = "lambda.1se")
+surv_test <- survfit(cvfit, newx = x_test, s = "lambda.min", 
+                    x = x_train, y = y_train)
 ```
 
-The full path of regularization can also be plotted:
-```{r}
-plot(mod)
-```
-
-## Model Predictions and Performance
-
-We will make out-of-sample predictions on the 25% hold-out set using `lambda.min`. 
-```{r}
-predictions <- predict(mod, x_test, s="lambda.min")
-head(predictions)
-```
-
-### C-index
+Plots using base `R` graphics can quickly be generating using the `plot.survfit()` method, which produces a survival curve for each patient in the test set.
 
 ```{r}
-get_cindex <- function(newx, newy, fit, lambda){
-  survival::concordance(newy ~ predict(fit, newx = newx, s = lambda), reverse=TRUE)
-}
-
-get_cindex(x_test, y_test, mod, "lambda.min")
+plot(surv_test)
 ```
+
+Note that we could have alternatively used a general purpose plotting package like `ggplot` or specialized plotting package for survival analysis like `survminer` to produce more modern looking graphics. It might also be a good idea to aggregate predicted survival curves across patients in a meaningful way.
 
 ### Calibration
+While there are many great `R` packages such a `rms` and `pec` that can be used to evaluate a survival model (including for calibration), none (to our knowledge) work with LTRC data. We consequently wrote our own function to calibrate survival models for the paper (available in the file `R/calibrate.R`), which we will use here. `calibrate()` is a generic function with a method for `survfit` objects. We also created a generic `autplot()` method to quickly plot the output produced by `calibrate()`. 
 
-```{r}
-# Predict survival probabilities
-survfit <- survfit(mod, newx = x_test, s="lambda.min", x= x_train, y= y_train)
+Let's calibrate the model at semi-annual intervals for up to 3 years. Each point consists of patients in a given decile of predicted survival at a particular time point. The x-axis is the average predicted survival probability and the y-axis is the pseudo observed survival probability computed using the (left truncation adjusted) Kaplan-Meier estimator. Perfectly calibrated predictions are those that lie along the 45-degree line so that predicted and observed survival probabilities are equal.
 
-# Get calibration at time points
-cal <- calibrate.survfit(object = survfit, times = seq(.5, 3, .5), y = y_test)
+```{r calibrate}
+# calibrate.survfit() method
+cal_test <- calibrate(object = surv_test, times = seq(.5, 3, .5), y = y_test)
 
-autoplot.calibrate(cal)
+# autoplot.calibrate() method
+autoplot(cal_test)
 ```
 
