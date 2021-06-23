@@ -141,14 +141,14 @@ concordance(y_test ~ lp_test, reverse = TRUE)
 
 ## Survival probabilities and calibration
 ### Survival probabilities
-Models fit with `glmnet` now have `survfit` method which can be used to generate survival curves. Note that the values of `x` and `y` used to train the model must also be passed so that the baseline hazard can be computed.
+Models fit with `glmnet` now have a `survfit` method which can be used to generate survival curves. Note that the values of `x` and `y` used to train the model must also be passed so that the baseline hazard can be computed.
 
 ```{r}
 surv_test <- survfit(cvfit, newx = x_test, s = "lambda.min", 
                     x = x_train, y = y_train)
 ```
 
-Plots using base `R` graphics can quickly be generating using the `plot.survfit()` method, which produces a survival curve for each patient in the test set.
+Plots using base `R` graphics can quickly be generated using the `plot.survfit()` method, which produces a survival curve for each patient in the test set.
 
 ```{r}
 plot(surv_test)
