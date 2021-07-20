@@ -67,7 +67,7 @@ test_data <- testing(data_split)
 # Model fitting
 ## Model data
 ### Input matrix
-`glmnet` requires an input matrix `x`, which which must be a `matrix` object. Here we consider a simple example with a small number of predictors contained in `x`.  
+`glmnet` requires an input matrix `x`, which must be a `matrix` object. Here we consider a simple example with a small number of predictors contained in `x`.  
 
 ```{r xvars}
 x_vars <- attr(simdata, "x_vars")
@@ -82,7 +82,7 @@ x_test <- as.matrix(test_data[, x_vars])
 ```
 
 ### Response
-When fitting Cox proportional hazards models with `glmnet`, the response should be a `survival::Surv` object. The key difference between modeling LTRC and RC data, is that the response must contain start-stop intervals when using LTRC data. Start-stop `Surv` object are created by passing the time that a patient enters the dataset (`time`), the follow-up time (`time2`), and a status indicator equal to 1 if a patient has died and 0 if they are alive. 
+When fitting Cox proportional hazards models with `glmnet`, the response should be a `survival::Surv` object. The key difference between modeling LTRC and RC data is that the response must contain start-stop intervals when using LTRC data. Start-stop `Surv` objects are created by passing the time that a patient enters the dataset (`time`), the follow-up time (`time2`), and a status indicator equal to 1 if a patient has died and 0 if they are alive. 
 
 As with `x`, we create `y` for both the training and the test sets. 
 
@@ -97,7 +97,7 @@ y_test <- Surv(test_data$entry_time,
 ```
 
 ## Cross validation
-We will fit a penalized Lasso model appropriate for LTRC data using `cv.glmnet()` (note: requires `glmnet` > 4.1). The value of the tuning parameter$\lambda$ that minimizes the partial likelihood deviance (`lambda.min`) is selected using 5-fold cross validation. For more details, see the vignette on the [glmnet website](https://glmnet.stanford.edu/articles/Coxnet.html).
+We will fit a penalized lasso model appropriate for LTRC data using `cv.glmnet()` (note: requires `glmnet` > 4.1). The value of the tuning parameter $\lambda$ that minimizes the partial likelihood deviance (`lambda.min`) is selected using 5-fold cross validation. For more details, see the vignette on the [glmnet website](https://glmnet.stanford.edu/articles/Coxnet.html).
 
 ```{r glmnetCV}
 cvfit <- cv.glmnet(x_train, y_train, family = "cox", nfolds = 5)
@@ -123,7 +123,7 @@ plot(cvfit)
 ```
 
 # Model predictions and performance
-We will make out-of-sample predictions on the test set (25% of data) from models where the deviance was minimized (`lambda.min`). With survival data, there is no single best way to summarize predictions or to assess the performance of a model. We will first consider the C-index, which is a measure of the extent to which a model can *discriminate* across patients. Then we will examine survival probabilities and the extent to which predicted probabilities are well *calibrated*; that is, the extent to which predicted probabilities are  similar to observed probabilities.
+We will make out-of-sample predictions on the test set (25% of data) from models where the deviance was minimized (`lambda.min`). With survival data, there is no single best way to summarize predictions or to assess the performance of a model. We will first consider the C-index, which is a measure of the extent to which a model can *discriminate* across patients. Then we will examine survival probabilities and the extent to which predicted probabilities are well *calibrated*; that is, the extent to which predicted probabilities are similar to observed probabilities.
 
 ## C-index
 The C-index can be computed from the linear predictor (i.e., the predicted log hazards). By default, the `predict.cv.glmnet()` method predicts the linear predictor for each patient.
@@ -148,16 +148,16 @@ surv_test <- survfit(cvfit, newx = x_test, s = "lambda.min",
                     x = x_train, y = y_train)
 ```
 
-Plots using base `R` graphics can quickly be generated using the `plot.survfit()` method, which produces a survival curve for each patient in the test set.
+Plots using base `R` graphics can be quickly generated using the `plot.survfit()` method, which produces a survival curve for each patient in the test set.
 
 ```{r}
 plot(surv_test)
 ```
 
-Note that we could have alternatively used a general purpose plotting package like `ggplot` or specialized plotting package for survival analysis like `survminer` to produce more modern looking graphics. It might also be a good idea to aggregate predicted survival curves across patients in a meaningful way.
+Note that we could have alternatively used a general purpose plotting package like `ggplot` or a specialized plotting package for survival analysis like `survminer` to produce more modern looking graphics. It might also be a good idea to aggregate predicted survival curves across patients in a meaningful way.
 
 ### Calibration
-While there are many great `R` packages such a `rms` and `pec` that can be used to evaluate a survival model (including for calibration), none (to our knowledge) work with LTRC data. We consequently wrote our own function to calibrate survival models for the paper (available in the file `R/calibrate.R`), which we will use here. `calibrate()` is a generic function with a method for `survfit` objects. We also created a generic `autplot()` method to quickly plot the output produced by `calibrate()`. 
+While there are many great `R` packages such a `rms` and `pec` that can be used to evaluate a survival model (including via calibration), none (to our knowledge) work with LTRC data. We consequently wrote our own function to calibrate survival models for the paper (available in the file `R/calibrate.R`), which we will use here. `calibrate()` is a generic function with a method for `survfit` objects. We also created a generic `autplot()` method to quickly plot the output produced by `calibrate()`. 
 
 Let's calibrate the model at semi-annual intervals for up to 3 years. Each point consists of patients in a given decile of predicted survival at a particular time point. The x-axis is the average predicted survival probability and the y-axis is the pseudo observed survival probability computed using the (left truncation adjusted) Kaplan-Meier estimator. Perfectly calibrated predictions are those that lie along the 45-degree line so that predicted and observed survival probabilities are equal.
 
