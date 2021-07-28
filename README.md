@@ -1,5 +1,5 @@
 # Penalized regression for left-truncated and right-censored survival data
-This repository contains code for a [paper](https://www.medrxiv.org/content/10.1101/2021.02.09.21251373v1) on estimation and evaluation of penalized survival models with high dimensional left-truncated and right-censored (LTRC) survival data. All code for the manuscript can be executed by running the file [`main.R`](main.R). All functions required are available within the `R` directory. A simpler [example analysis](https://phcanalytics.github.io/coxnet-ltrc/example.html) is also provided.
+This repository contains code for our *Statistics in Medicine* [paper](https://doi.org/10.1002/sim.9136) on estimation and evaluation of penalized survival models with high dimensional left-truncated and right-censored (LTRC) survival data. All code for the manuscript can be executed by running the file [`main.R`](main.R). All functions required are available within the `R` directory. A simpler [example analysis](https://phcanalytics.github.io/coxnet-ltrc/example.html) is also provided.
 
 ## Data availability 
 The analysis was performed with the Flatiron Health and Foundation Medicine Clinico-Genomic Database (CGDB). A single analysis dataset named `data.rds` is required for the real-world data application, but we are unfortuntely not permitted to share it. 
