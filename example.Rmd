@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Introduction
-This guide shows how to use penalized survival models for prediction with left-truncated and right-censored data (LTRC) as described in McGough *et al.* 2021. The analyses utilize a simulated dataset based on the Foundation Medicine and Flatiron Health Clinico-Genomic Database (CGDB), as described in the paper.
+This guide shows how to use penalized survival models for prediction with left-truncated and right-censored data (LTRC) as described in [McGough *et al.* 2021](https://onlinelibrary.wiley.com/doi/10.1002/sim.9136). The analyses utilize a simulated dataset based on the Foundation Medicine and Flatiron Health Clinico-Genomic Database (CGDB), as described in the paper.
 
 We will use `glmnet` to fit the models, `rsample` to split the data into training and test sets, and various features of the `survival` package. We will also need a script containing custom functions for calibrating survival predictions.
 
